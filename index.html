@@ -1,0 +1,686 @@
+<!--
+  FORMULARIO DE INSCRIPCIÓN — SEMANA TI · CAFIVER
+  - Mobile-first (pensado para escanear QR y abrir en celular)
+  - Búsqueda por número de empleado (LLAVE única)
+  - Autocompleta datos del empleado
+  - Control de inscripción sin duplicados (key = número de empleado)
+  - Panel de administrador para ver / exportar inscritos
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<script>
+  /* Garantiza el viewport aunque el archivo se sirva como página suelta (QR) */
+  (function(){
+    if(!document.querySelector('meta[name=viewport]')){
+      var m=document.createElement('meta');
+      m.name='viewport';
+      m.content='width=device-width, initial-scale=1, viewport-fit=cover';
+      document.head && document.head.appendChild(m);
+    }
+  })();
+</script>
+<style>
+  /* ====== Tipografía ====== */
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
+
+  :root{
+    --azul:#1652f0;
+    --azul-osc:#0b2e8a;
+    --naranja:#f15a22;
+    --verde:#3aa935;
+    --purpura:#7b3fb5;
+    --tinta:#0e1116;
+    --gris:#5b6573;
+    --linea:#e3e7ee;
+    --panel:#ffffff;
+    --fondo:#eef1f6;
+    --suave:#f5f7fb;
+    --ok:#1f9d55;
+    --err:#d23b3b;
+    --sombra:0 10px 30px rgba(14,17,22,.10);
+    --sombra-sm:0 3px 12px rgba(14,17,22,.08);
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    color:var(--tinta);
+    background:
+      radial-gradient(900px 500px at 110% -10%, rgba(22,82,240,.10), transparent 60%),
+      radial-gradient(700px 500px at -10% 110%, rgba(241,90,34,.08), transparent 55%),
+      var(--fondo);
+    background-attachment:fixed;
+    line-height:1.45;
+    -webkit-text-size-adjust:100%;
+  }
+
+  .wrap{max-width:560px;margin:0 auto;padding:16px 14px 60px}
+
+  /* ====== Encabezado ====== */
+  .hero{
+    background:linear-gradient(180deg,#0e1116, #14181f);
+    border-radius:22px;
+    padding:22px 18px 18px;
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+    box-shadow:var(--sombra);
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(90deg, rgba(22,82,240,.25) 1px, transparent 1px),
+      linear-gradient(rgba(241,90,34,.18) 1px, transparent 1px);
+    background-size:26px 26px;
+    -webkit-mask-image:radial-gradient(120% 90% at 80% 0%, #000 30%, transparent 75%);
+            mask-image:radial-gradient(120% 90% at 80% 0%, #000 30%, transparent 75%);
+    opacity:.6;
+  }
+  .hero > *{position:relative;z-index:1}
+  .badge-marca{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:10px;letter-spacing:.32em;text-transform:uppercase;
+    color:#7d8aa0;font-weight:500;margin-bottom:14px;
+  }
+  .badge-marca .dot{width:6px;height:6px;border-radius:50%;background:var(--naranja)}
+  .titulo{
+    font-weight:300;line-height:.9;letter-spacing:-.02em;
+    font-size:clamp(38px,12vw,52px);margin:0;
+  }
+  .titulo .ti{
+    font-weight:600;color:#3d79ff;
+  }
+  .titulo .punto{font-weight:200;color:#fff}
+  .hero-rule{
+    margin-top:16px;height:1px;
+    background:linear-gradient(90deg,var(--azul),transparent);
+  }
+  .tags{
+    margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;
+  }
+  .tag{
+    font-size:11px;font-weight:400;letter-spacing:.03em;
+    color:#aeb8c6;
+  }
+  .tag::after{content:"·";margin-left:6px;color:#475063}
+  .tag:last-child::after{content:""}
+  .t1,.t2,.t3,.t4{background:none}
+
+  .fecha-pill{
+    margin-top:16px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+  }
+  .fecha-pill .mes{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#7d8aa0;font-weight:500}
+  .fecha-pill .rango{font-size:30px;font-weight:300;color:#fff;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+  .fecha-pill .anio{font-size:12px;color:#7d8aa0;font-weight:300}
+  .fecha-pill .h{
+    width:100%;margin-top:8px;
+    font-size:11px;color:#8b94a3;font-weight:400;letter-spacing:.02em;
+  }
+
+  /* ====== Tarjetas ====== */
+  .card{
+    background:var(--panel);border:1px solid var(--linea);border-radius:18px;
+    padding:18px 16px;margin-top:14px;box-shadow:var(--sombra-sm);
+  }
+  .card h2{
+    margin:0 0 4px;font-size:18px;font-weight:600;letter-spacing:-.01em;
+    display:flex;align-items:center;gap:8px;
+  }
+  .card h2 .num{
+    background:var(--azul);color:#fff;width:24px;height:24px;border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:0 0 auto;
+  }
+  .card .sub{color:var(--gris);font-size:13px;margin:0 0 14px}
+
+  label{display:block;font-size:11px;font-weight:500;letter-spacing:.14em;color:var(--gris);text-transform:uppercase;margin:0 0 6px}
+
+  .emp-row{display:flex;gap:8px}
+  input[type=text], input[type=password], select{
+    width:100%;font-family:inherit;font-size:16px;color:var(--tinta);
+    background:var(--suave);border:1.5px solid var(--linea);border-radius:12px;
+    padding:13px 13px;outline:none;transition:border-color .15s, background .15s, box-shadow .15s;
+  }
+  #empNum{font-family:'Space Mono',monospace;font-weight:700;letter-spacing:.08em}
+  input:focus, select:focus{border-color:var(--azul);background:#fff;box-shadow:0 0 0 4px rgba(22,82,240,.12)}
+
+  .btn{
+    font-family:inherit;font-weight:600;font-size:15px;letter-spacing:.01em;
+    border:none;border-radius:12px;padding:13px 16px;cursor:pointer;
+    transition:transform .08s, filter .15s, opacity .15s;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-azul{background:var(--azul);color:#fff}
+  .btn-azul:hover{filter:brightness(1.07)}
+  .btn-buscar{flex:0 0 auto;padding:13px 18px}
+  .btn-full{width:100%}
+  .btn-naranja{background:var(--naranja);color:#fff}
+  .btn-ghost{background:#fff;color:var(--tinta);border:1.5px solid var(--linea)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  .hint{font-size:12px;color:var(--gris);margin-top:8px}
+
+  /* mensaje de búsqueda */
+  .msg{margin-top:10px;font-size:13.5px;font-weight:600;border-radius:10px;padding:10px 12px;display:none}
+  .msg.show{display:block}
+  .msg.err{background:#fdecec;color:var(--err);border:1px solid #f6c9c9}
+  .msg.ok{background:#e9f7ee;color:var(--ok);border:1px solid #b9e6c8}
+  .msg.info{background:#eaf0ff;color:var(--azul-osc);border:1px solid #c7d6ff}
+
+  /* ficha empleado */
+  .ficha{display:none;margin-top:14px;border:1.5px dashed #c7d6ff;background:#f4f8ff;border-radius:14px;padding:14px}
+  .ficha.show{display:block;animation:pop .25s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .ficha .nombre{font-size:19px;font-weight:600;letter-spacing:-.01em;line-height:1.15}
+  .ficha .meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-size:12px;font-weight:500;background:#fff;border:1px solid var(--linea);border-radius:999px;padding:5px 11px;color:var(--gris)}
+  .chip b{color:var(--tinta);font-weight:600}
+  .chip.num{font-family:'Space Mono',monospace;color:var(--azul);border-color:#c7d6ff;background:#eaf0ff}
+
+  /* sesiones */
+  .dias{display:grid;gap:10px;margin-top:4px}
+  .dia{
+    border:1.5px solid var(--linea);border-radius:14px;padding:12px;background:#fff;
+    transition:border-color .15s, box-shadow .15s, background .15s;cursor:pointer;display:block;
+  }
+  .dia.sel{border-color:var(--azul);box-shadow:0 0 0 3px rgba(22,82,240,.10);background:#fbfcff}
+  .dia-top{display:flex;align-items:center;gap:10px}
+  .dia .check{
+    width:22px;height:22px;border-radius:7px;border:2px solid var(--linea);flex:0 0 auto;
+    display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;transition:.15s;
+  }
+  .dia.sel .check{background:var(--azul);border-color:var(--azul)}
+  .dia .info{flex:1;min-width:0}
+  .dia .d{font-weight:600;font-size:15px}
+  .dia .tema{font-size:12.5px;color:var(--gris);font-weight:400}
+  .dia .pill{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;color:#fff;font-family:'Space Mono',monospace}
+  .pL{background:var(--azul)}.pM{background:var(--azul)}.pX{background:var(--verde)}.pJ{background:#0a66c2}.pV{background:var(--purpura)}
+
+  .horarios{display:none;gap:8px;margin-top:10px}
+  .dia.sel .horarios{display:flex}
+  .horario{
+    flex:1;text-align:center;font-size:12.5px;font-weight:500;border:1.5px solid var(--linea);
+    border-radius:10px;padding:9px 6px;background:var(--suave);color:var(--gris);cursor:pointer;transition:.12s;
+  }
+  .horario.on{background:var(--naranja);border-color:var(--naranja);color:#fff}
+  .horario small{display:block;font-weight:400;font-size:10.5px;opacity:.9}
+
+  .acciones{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+
+  /* éxito */
+  .exito{display:none;text-align:center;padding:8px 4px}
+  .exito.show{display:block;animation:pop .3s ease}
+  .exito .ico{
+    width:64px;height:64px;border-radius:50%;background:var(--verde);color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;font-size:34px;margin-bottom:8px;
+    box-shadow:0 8px 20px rgba(58,169,53,.35);
+  }
+  .exito h2{justify-content:center}
+  .resumen{text-align:left;background:var(--suave);border:1px solid var(--linea);border-radius:14px;padding:14px;margin:14px 0}
+  .resumen .r{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--linea);font-size:14px}
+  .resumen .r:last-child{border-bottom:none}
+  .resumen .r span:first-child{color:var(--gris);font-weight:400}
+  .resumen .r span:last-child{font-weight:500;text-align:right}
+
+  /* footer / lema */
+  .lema{
+    text-align:center;margin:20px 6px 0;color:var(--gris);font-size:12.5px;font-weight:400;letter-spacing:.02em;
+  }
+  .lema .b{color:var(--azul);font-weight:500}
+
+  /* admin */
+  .admin-link{display:block;text-align:center;margin-top:18px;color:var(--gris);font-size:12px;text-decoration:underline;cursor:pointer;background:none;border:none;width:100%}
+  .admin-panel{display:none}
+  .admin-panel.show{display:block}
+  .stat-row{display:flex;gap:8px;margin-bottom:12px}
+  .stat{flex:1;background:var(--suave);border:1px solid var(--linea);border-radius:12px;padding:12px;text-align:center}
+  .stat .n{font-size:24px;font-weight:500;color:var(--azul);font-family:'Space Mono',monospace}
+  .stat .l{font-size:10.5px;color:var(--gris);font-weight:500;text-transform:uppercase;letter-spacing:.08em}
+  .tabla-wrap{overflow:auto;border:1px solid var(--linea);border-radius:12px;max-height:380px}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:520px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--linea);white-space:nowrap}
+  th{background:var(--suave);position:sticky;top:0;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--gris)}
+  td .mono{font-family:'Space Mono',monospace;color:var(--azul);font-weight:400}
+  .vacio{text-align:center;color:var(--gris);padding:24px;font-size:13px}
+
+  .loader{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .nube{font-size:11px;color:var(--gris);text-align:center;margin-top:10px}
+
+  /* Teléfonos pequeños (≤360px) */
+  @media (max-width:360px){
+    .wrap{padding:12px 10px 50px}
+    .card{padding:16px 13px}
+    .dia .pill{display:none}            /* la etiqueta del día se oculta para dar espacio */
+    .titulo{font-size:38px}
+    .fecha-pill .rango{font-size:26px}
+    .horario small{font-size:10px}
+  }
+  /* Respeta a quien prefiere menos animación */
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="badge-marca"><span class="dot"></span> Cafiver · Est. 1985</div>
+    <h1 class="titulo">SEMANA <span class="ti">TI</span><span class="punto">.</span></h1>
+    <div class="hero-rule"></div>
+    <div class="tags">
+      <span class="tag">SAP</span>
+      <span class="tag">IA</span>
+      <span class="tag">Microsoft 365</span>
+      <span class="tag">Ciberseguridad</span>
+    </div>
+    <div class="fecha-pill">
+      <span class="mes">Junio</span>
+      <span class="rango">08—12</span>
+      <span class="anio">2026</span>
+      <span class="h">Mañanas 9:00–11:00 AM · Tardes 5:00–6:30 PM</span>
+    </div>
+  </div>
+
+  <!-- ===== FORMULARIO ===== -->
+  <div id="form">
+
+    <!-- Paso 1: número de empleado -->
+    <div class="card">
+      <h2><span class="num">1</span> Tu número de empleado</h2>
+      <p class="sub">Es tu llave de inscripción. Escríbelo y presiona buscar.</p>
+      <label for="empNum">Número de empleado</label>
+      <div class="emp-row">
+        <input type="text" id="empNum" inputmode="numeric" autocomplete="off" placeholder="Ej. 50813" maxlength="10">
+        <button class="btn btn-azul btn-buscar" id="btnBuscar">Buscar</button>
+      </div>
+      <div class="msg" id="msgBuscar"></div>
+
+      <!-- Ficha del empleado -->
+      <div class="ficha" id="ficha">
+        <div class="nombre" id="fNombre"></div>
+        <div class="meta">
+          <span class="chip num">#<b id="fNum"></b></span>
+          <span class="chip">Depto: <b id="fDepto"></b></span>
+          <span class="chip">Dirección: <b id="fDir"></b></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 2: sesiones -->
+    <div class="card" id="cardSesiones" style="opacity:.5;pointer-events:none">
+      <h2><span class="num">2</span> Elige tus sesiones</h2>
+      <p class="sub">Marca los días a los que asistirás y tu horario en cada uno.</p>
+      <div class="dias" id="dias"></div>
+    </div>
+
+    <!-- Paso 3: confirmar -->
+    <div class="card" id="cardConfirmar" style="opacity:.5;pointer-events:none">
+      <h2><span class="num">3</span> Confirmar inscripción</h2>
+      <p class="sub">Revisa que tus datos sean correctos antes de enviar.</p>
+      <div class="acciones">
+        <button class="btn btn-naranja btn-full" id="btnInscribir" disabled>Confirmar mi inscripción</button>
+      </div>
+      <div class="msg" id="msgFinal"></div>
+      <div class="nube">🔒 Tu inscripción se guarda con tu número de empleado en la base oficial. No se permiten duplicados.</div>
+    </div>
+
+  </div>
+
+  <!-- ===== ÉXITO ===== -->
+  <div class="card exito" id="exito">
+    <div class="ico">✓</div>
+    <h2>¡Inscripción confirmada!</h2>
+    <p class="sub" style="text-align:center" id="exitoSub"></p>
+    <div class="resumen" id="resumen"></div>
+    <div class="acciones">
+      <button class="btn btn-ghost btn-full" id="btnEditar">Editar mi inscripción</button>
+    </div>
+  </div>
+
+  <p class="lema">La tecnología nos mueve, el café nos conecta.<br><span class="b">Pasión que se comparte, tecnología que transforma.</span></p>
+
+  <button class="admin-link" id="adminLink">Acceso administrador</button>
+
+  <!-- ===== ADMIN ===== -->
+  <div class="card admin-panel" id="adminPanel">
+    <h2 style="margin-bottom:12px">Panel de inscripciones</h2>
+    <div id="adminLogin">
+      <label for="adminPass">Contraseña</label>
+      <input type="password" id="adminPass" placeholder="••••••••">
+      <div class="msg" id="msgAdmin"></div>
+      <div class="acciones" style="margin-top:10px">
+        <button class="btn btn-azul btn-full" id="btnAdminEntrar">Entrar</button>
+        <button class="btn btn-ghost btn-full" id="btnAdminCerrar">Volver al formulario</button>
+      </div>
+      <p class="hint">Los datos se guardan en tu Google Sheet. Este panel es una vista rápida; el reporte completo lo tienes en la hoja.</p>
+    </div>
+
+    <div id="adminData" style="display:none">
+      <div class="stat-row">
+        <div class="stat"><div class="n" id="stTotal">0</div><div class="l">Inscritos</div></div>
+        <div class="stat"><div class="n" id="stSesiones">0</div><div class="l">Sesiones</div></div>
+      </div>
+      <div class="acciones" style="flex-direction:row;gap:8px;margin-bottom:12px">
+        <button class="btn btn-azul" style="flex:1" id="btnCSV">⬇ Exportar CSV</button>
+        <button class="btn btn-ghost" style="flex:1" id="btnRefrescar">↻ Refrescar</button>
+      </div>
+      <div class="tabla-wrap">
+        <table id="tabla">
+          <thead><tr><th>#</th><th>Nombre</th><th>Depto</th><th>Dir.</th><th>Sesiones</th><th>Fecha</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-ghost btn-full" id="btnAdminSalir" style="margin-top:12px">Cerrar sesión</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   1) BASE DE DATOS DE EMPLEADOS  (LLAVE = número de empleado)
+   ------------------------------------------------------------
+   👉 Reemplaza este objeto con tu base real. Formato:
+      "NUMERO": { nombre, departamento, direccion }
+   ============================================================ */
+const EMPLEADOS = {
+  "50813": { nombre:"Juan Roberto Amaya Rodríguez", departamento:"TI", direccion:"DAF" },
+  // --- ejemplos adicionales (puedes borrarlos) ---
+  "50920": { nombre:"María Fernanda López Hernández", departamento:"Recursos Humanos", direccion:"DAF" },
+  "51044": { nombre:"Carlos Eduardo Martínez Gómez", departamento:"Ventas", direccion:"Comercial" },
+  "51188": { nombre:"Ana Patricia Ramírez Soto", departamento:"Finanzas", direccion:"DAF" },
+  "51230": { nombre:"Luis Ángel Torres Mendoza", departamento:"Compras", direccion:"Operaciones" },
+};
+
+/* ============================================================
+   2) PROGRAMA DE LA SEMANA
+   ============================================================ */
+const SESIONES = [
+  { id:"lun", clase:"pL", dia:"Lunes 8 Junio",     tema:"SAP Overview + Demo de IA" },
+  { id:"mar", clase:"pM", dia:"Martes 9 Junio",    tema:"SAP Módulos (MM, SD, FI, PP, HR)" },
+  { id:"mie", clase:"pX", dia:"Miércoles 10 Junio",tema:"Portales Corporativos" },
+  { id:"jue", clase:"pJ", dia:"Jueves 11 Junio",   tema:"Microsoft 365 — Día completo" },
+  { id:"vie", clase:"pV", dia:"Viernes 12 Junio",  tema:"Ciberseguridad" },
+];
+
+const ADMIN_PASS = "cafiver2026"; // 👈 cámbiala
+
+/* ============================================================
+   🔗 CONEXIÓN CON GOOGLE SHEETS
+   ------------------------------------------------------------
+   Pega aquí la URL que te da Google al publicar el Apps Script
+   (termina en /exec). Mientras esté vacía, el formulario avisa
+   que falta configurar.
+   ============================================================ */
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbzN6qEXezoLtw5NGkEpXIB4yCCb8TE1AcI4zYFL-DoIsSvvef5Gjaw488g7L-uoUz6YCg/exec";
+
+function sheetsListo(){
+  return SHEETS_URL && SHEETS_URL.indexOf("script.google.com") !== -1;
+}
+
+/* ============================================================
+   Estado
+   ============================================================ */
+let empActual = null;       // { num, nombre, departamento, direccion }
+let seleccion = {};         // { lun:"manana"|"tarde", ... }
+
+/* ============================================================
+   Helpers de Google Sheets (sin duplicados; llave = num empleado)
+   - guardarInscripcion: POST que inserta o actualiza la fila
+   - obtenerInscripcion: GET ?num=XXXX para ver si ya existe
+   - listarInscripciones: GET ?admin=1 para el panel de control
+   El Apps Script usa el número de empleado como llave única.
+   ============================================================ */
+async function guardarInscripcion(num, data){
+  if(!sheetsListo()) throw new Error("Google Sheets no configurado");
+  // text/plain evita el preflight CORS con Apps Script
+  const r = await fetch(SHEETS_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"text/plain;charset=utf-8" },
+    body: JSON.stringify({ accion:"guardar", registro:data })
+  });
+  const j = await r.json();
+  if(!j || j.ok !== true) throw new Error(j && j.error ? j.error : "error al guardar");
+  return j;
+}
+async function obtenerInscripcion(num){
+  if(!sheetsListo()) return null;
+  try{
+    const r = await fetch(SHEETS_URL + "?num=" + encodeURIComponent(num), { method:"GET" });
+    const j = await r.json();
+    return (j && j.ok && j.registro) ? j.registro : null;
+  }catch(e){ return null; }
+}
+async function listarInscripciones(){
+  if(!sheetsListo()) return [];
+  try{
+    const r = await fetch(SHEETS_URL + "?admin=1", { method:"GET" });
+    const j = await r.json();
+    return (j && j.ok && Array.isArray(j.registros)) ? j.registros : [];
+  }catch(e){ return []; }
+}
+
+/* ============================================================
+   Refs
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const empNum = $("empNum"), btnBuscar = $("btnBuscar"), msgBuscar = $("msgBuscar");
+const ficha = $("ficha");
+const cardSesiones = $("cardSesiones"), diasBox = $("dias");
+const cardConfirmar = $("cardConfirmar"), btnInscribir = $("btnInscribir"), msgFinal = $("msgFinal");
+const exito = $("exito"), formBox = $("form");
+
+/* Construir tarjetas de sesiones */
+function renderSesiones(){
+  diasBox.innerHTML = "";
+  SESIONES.forEach(s=>{
+    const div = document.createElement("div");
+    div.className = "dia"; div.dataset.id = s.id;
+    div.innerHTML = `
+      <div class="dia-top">
+        <span class="check">✓</span>
+        <div class="info">
+          <div class="d">${s.dia}</div>
+          <div class="tema">${s.tema}</div>
+        </div>
+        <span class="pill ${s.clase}">${s.id.toUpperCase()}</span>
+      </div>
+      <div class="horarios">
+        <div class="horario" data-h="manana">Mañana<small>9:00–11:00 AM</small></div>
+        <div class="horario" data-h="tarde">Tarde<small>5:00–6:30 PM</small></div>
+      </div>`;
+    // toggle día
+    div.querySelector(".dia-top").addEventListener("click", ()=>{
+      const on = div.classList.toggle("sel");
+      if(on){ seleccion[s.id] = seleccion[s.id] || "manana"; pintarHorario(div, seleccion[s.id]); }
+      else { delete seleccion[s.id]; }
+      actualizarBoton();
+    });
+    // horarios
+    div.querySelectorAll(".horario").forEach(h=>{
+      h.addEventListener("click",(e)=>{
+        e.stopPropagation();
+        seleccion[s.id] = h.dataset.h;
+        pintarHorario(div, h.dataset.h);
+        actualizarBoton();
+      });
+    });
+    diasBox.appendChild(div);
+  });
+}
+function pintarHorario(div, h){
+  div.querySelectorAll(".horario").forEach(x=>x.classList.toggle("on", x.dataset.h===h));
+}
+function actualizarBoton(){
+  btnInscribir.disabled = !(empActual && Object.keys(seleccion).length>0);
+}
+
+/* ============================================================
+   Buscar empleado
+   ============================================================ */
+async function buscar(){
+  const num = empNum.value.trim();
+  msg(msgBuscar,"","");
+  ficha.classList.remove("show");
+  empActual = null; seleccion = {};
+  bloquear(cardSesiones,true); bloquear(cardConfirmar,true);
+  actualizarBoton();
+
+  if(!num){ return msg(msgBuscar,"Escribe tu número de empleado.","err"); }
+
+  const e = EMPLEADOS[num];
+  if(!e){
+    return msg(msgBuscar,`No encontramos el número ${num} en la base. Verifícalo o contacta a RH/TI.`,"err");
+  }
+
+  empActual = { num, ...e };
+  $("fNombre").textContent = e.nombre;
+  $("fNum").textContent = num;
+  $("fDepto").textContent = e.departamento;
+  $("fDir").textContent = e.direccion;
+  ficha.classList.add("show");
+
+  // ¿Ya está inscrito?
+  const previa = await obtenerInscripcion(num);
+  if(previa){
+    seleccion = previa.sesiones || {};
+    renderSesiones();
+    // marcar selección previa
+    Object.entries(seleccion).forEach(([id,h])=>{
+      const div = diasBox.querySelector(`.dia[data-id="${id}"]`);
+      if(div){ div.classList.add("sel"); pintarHorario(div,h); }
+    });
+    bloquear(cardSesiones,false); bloquear(cardConfirmar,false);
+    actualizarBoton();
+    msg(msgBuscar,`✓ Encontrado. Ya tienes una inscripción registrada — puedes actualizarla abajo.`,"info");
+    btnInscribir.textContent = "Actualizar mi inscripción";
+  } else {
+    renderSesiones();
+    bloquear(cardSesiones,false); bloquear(cardConfirmar,false);
+    msg(msgBuscar,`✓ ¡Hola, ${e.nombre.split(" ")[0]}! Continúa eligiendo tus sesiones.`,"ok");
+    btnInscribir.textContent = "Confirmar mi inscripción";
+  }
+}
+
+function bloquear(card, b){
+  card.style.opacity = b ? .5 : 1;
+  card.style.pointerEvents = b ? "none" : "auto";
+}
+function msg(el, txt, tipo){
+  el.textContent = txt;
+  el.className = "msg" + (txt ? " show "+tipo : "");
+}
+
+/* ============================================================
+   Inscribir / actualizar
+   ============================================================ */
+async function inscribir(){
+  if(!empActual) return;
+  if(Object.keys(seleccion).length===0){ return msg(msgFinal,"Selecciona al menos un día.","err"); }
+  if(!sheetsListo()){ return msg(msgFinal,"El formulario aún no está conectado a Google Sheets. Avisa al administrador.","err"); }
+
+  btnInscribir.disabled = true;
+  const original = btnInscribir.textContent;
+  btnInscribir.innerHTML = '<span class="loader"></span> Guardando...';
+
+  const data = {
+    num: empActual.num,
+    nombre: empActual.nombre,
+    departamento: empActual.departamento,
+    direccion: empActual.direccion,
+    sesiones: seleccion,
+    fecha: new Date().toISOString(),
+  };
+
+  try{
+    await guardarInscripcion(empActual.num, data);
+    mostrarExito(data);
+  }catch(e){
+    btnInscribir.disabled = false;
+    btnInscribir.textContent = original;
+    msg(msgFinal,"No se pudo guardar. Revisa tu conexión e intenta de nuevo.","err");
+  }
+}
+
+function nombreSesion(id){ const s = SESIONES.find(x=>x.id===id); return s?s.dia:id; }
+function etiquetaHorario(h){ return h==="tarde" ? "Tarde (5:00–6:30 PM)" : "Mañana (9:00–11:00 AM)"; }
+
+function mostrarExito(data){
+  formBox.style.display = "none";
+  $("exitoSub").innerHTML = `Gracias, <b>${data.nombre}</b>. Te esperamos en la Semana TI.`;
+  const res = $("resumen");
+  res.innerHTML = `
+    <div class="r"><span>Empleado</span><span>#${data.num}</span></div>
+    <div class="r"><span>Departamento</span><span>${data.departamento}</span></div>
+    <div class="r"><span>Dirección</span><span>${data.direccion}</span></div>` +
+    Object.entries(data.sesiones).map(([id,h])=>
+      `<div class="r"><span>${nombreSesion(id)}</span><span>${etiquetaHorario(h)}</span></div>`
+    ).join("");
+  exito.classList.add("show");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ============================================================
+   Admin
+   ============================================================ */
+function csvEscape(v){ v = (v??"").toString(); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+
+async function pintarAdmin(){
+  const lista = await listarInscripciones();
+  lista.sort((a,b)=> (a.fecha<b.fecha?1:-1));
+  $("stTotal").textContent = lista.length;
+  $("stSesiones").textContent = lista.reduce((n,x)=> n + Object.keys(x.sesiones||{}).length, 0);
+  const tb = $("tbody");
+  if(lista.length===0){ tb.innerHTML = `<tr><td colspan="6" class="vacio">Aún no hay inscripciones.</td></tr>`; return; }
+  tb.innerHTML = lista.map(x=>{
+    const ses = Object.entries(x.sesiones||{}).map(([id,h])=>`${id.toUpperCase()}·${h==="tarde"?"PM":"AM"}`).join(", ");
+    const f = new Date(x.fecha).toLocaleDateString("es-MX",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+    return `<tr><td><span class="mono">${x.num}</span></td><td>${x.nombre}</td><td>${x.departamento}</td><td>${x.direccion}</td><td>${ses}</td><td>${f}</td></tr>`;
+  }).join("");
+}
+
+async function exportarCSV(){
+  const lista = await listarInscripciones();
+  lista.sort((a,b)=> (a.fecha<b.fecha?1:-1));
+  const head = ["Numero","Nombre","Departamento","Direccion","Lunes","Martes","Miercoles","Jueves","Viernes","FechaInscripcion"];
+  const rows = lista.map(x=>{
+    const g = id => x.sesiones && x.sesiones[id] ? (x.sesiones[id]==="tarde"?"Tarde":"Mañana") : "";
+    return [x.num,x.nombre,x.departamento,x.direccion,g("lun"),g("mar"),g("mie"),g("jue"),g("vie"),new Date(x.fecha).toLocaleString("es-MX")].map(csvEscape).join(",");
+  });
+  const csv = "\uFEFF" + [head.join(","), ...rows].join("\n");
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "inscripciones_semana_ti.csv";
+  a.click();
+}
+
+/* ============================================================
+   Eventos
+   ============================================================ */
+btnBuscar.addEventListener("click", buscar);
+empNum.addEventListener("keydown", e=>{ if(e.key==="Enter") buscar(); });
+empNum.addEventListener("input", ()=>{ empNum.value = empNum.value.replace(/\D/g,""); });
+btnInscribir.addEventListener("click", inscribir);
+$("btnEditar").addEventListener("click", ()=>{ exito.classList.remove("show"); formBox.style.display=""; window.scrollTo({top:0,behavior:"smooth"}); });
+
+// admin
+$("adminLink").addEventListener("click", ()=>{ $("adminPanel").classList.add("show"); $("adminPanel").scrollIntoView({behavior:"smooth"}); });
+$("btnAdminCerrar").addEventListener("click", ()=> $("adminPanel").classList.remove("show"));
+$("btnAdminEntrar").addEventListener("click", async ()=>{
+  if($("adminPass").value === ADMIN_PASS){
+    $("adminLogin").style.display="none"; $("adminData").style.display="block";
+    await pintarAdmin();
+  } else { msg($("msgAdmin"),"Contraseña incorrecta.","err"); }
+});
+$("btnRefrescar").addEventListener("click", pintarAdmin);
+$("btnCSV").addEventListener("click", exportarCSV);
+$("btnAdminSalir").addEventListener("click", ()=>{
+  $("adminData").style.display="none"; $("adminLogin").style.display="block";
+  $("adminPass").value=""; msg($("msgAdmin"),"","");
+});
+
+renderSesiones();
+</script>
