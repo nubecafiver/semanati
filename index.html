@@ -196,14 +196,15 @@
   .dia .pill{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;color:#fff;font-family:'Space Mono',monospace}
   .pL{background:var(--azul)}.pM{background:var(--azul)}.pX{background:var(--verde)}.pJ{background:#0a66c2}.pV{background:var(--purpura)}
 
-  .horarios{display:none;gap:8px;margin-top:10px}
+  .horarios{display:none;gap:6px;margin-top:10px}
   .dia.sel .horarios{display:flex}
   .horario{
     flex:1;text-align:center;font-size:12.5px;font-weight:500;border:1.5px solid var(--linea);
-    border-radius:10px;padding:9px 6px;background:var(--suave);color:var(--gris);cursor:pointer;transition:.12s;
+    border-radius:10px;padding:9px 4px;background:var(--suave);color:var(--gris);cursor:pointer;transition:.12s;
+    min-width:0;
   }
   .horario.on{background:var(--naranja);border-color:var(--naranja);color:#fff}
-  .horario small{display:block;font-weight:400;font-size:10.5px;opacity:.9}
+  .horario small{display:block;font-weight:400;font-size:9.5px;opacity:.85;margin-top:2px;letter-spacing:0;white-space:nowrap}
 
   .acciones{display:flex;flex-direction:column;gap:8px;margin-top:6px}
 
@@ -277,9 +278,9 @@
     </div>
     <div class="fecha-pill">
       <span class="mes">Junio</span>
-      <span class="rango">08—12</span>
+      <span class="rango">15—19</span>
       <span class="anio">2026</span>
-      <span class="h">Mañanas 9:00–11:00 AM · Tardes 5:00–6:30 PM</span>
+      <span class="h">Mañana 9:00–11:00 AM · Tarde 1 2:00–4:00 PM · Tarde 2 4:15–6:15 PM</span>
     </div>
   </div>
 
@@ -742,14 +743,14 @@ const EMPLEADOS = {
    2) PROGRAMA DE LA SEMANA
    ============================================================ */
 const SESIONES = [
-  { id:"lun", clase:"pL", dia:"Lunes 8 Junio",     tema:"SAP Overview + Demo de IA" },
-  { id:"mar", clase:"pM", dia:"Martes 9 Junio",    tema:"SAP Módulos (MM, SD, FI, PP, HR)" },
-  { id:"mie", clase:"pX", dia:"Miércoles 10 Junio",tema:"Portales Corporativos" },
-  { id:"jue", clase:"pJ", dia:"Jueves 11 Junio",   tema:"Microsoft 365 — Día completo" },
-  { id:"vie", clase:"pV", dia:"Viernes 12 Junio",  tema:"Ciberseguridad" },
+  { id:"lun", clase:"pL", dia:"Lunes 15 Junio",    tema:"SAP Overview + Demo de IA" },
+  { id:"mar", clase:"pM", dia:"Martes 16 Junio",   tema:"SAP Módulos (MM, SD, FI, PP, HR)" },
+  { id:"mie", clase:"pX", dia:"Miércoles 17 Junio",tema:"Portales Corporativos" },
+  { id:"jue", clase:"pJ", dia:"Jueves 18 Junio",   tema:"Microsoft 365 — Día completo" },
+  { id:"vie", clase:"pV", dia:"Viernes 19 Junio",  tema:"Ciberseguridad" },
 ];
 
-const ADMIN_PASS = "Cafiver2026"; // 👈 cámbiala
+const ADMIN_PASS = "cafiver2026"; // 👈 cámbiala
 
 /* ============================================================
    🔗 CONEXIÓN CON GOOGLE SHEETS
@@ -758,7 +759,7 @@ const ADMIN_PASS = "Cafiver2026"; // 👈 cámbiala
    (termina en /exec). Mientras esté vacía, el formulario avisa
    que falta configurar.
    ============================================================ */
-const SHEETS_URL = "https://script.google.com/macros/s/AKfycbwxdA1fvd2g826nFlUuEIgJ2wLC_gLV5IjLptAg3vyP8bC685SJ6IC7YejzXo2FXdQdgQ/exec";
+const SHEETS_URL = "PEGA_AQUI_TU_URL_DEL_APPS_SCRIPT";
 
 function sheetsListo(){
   return SHEETS_URL && SHEETS_URL.indexOf("script.google.com") !== -1;
@@ -833,7 +834,8 @@ function renderSesiones(){
       </div>
       <div class="horarios">
         <div class="horario" data-h="manana">Mañana<small>9:00–11:00 AM</small></div>
-        <div class="horario" data-h="tarde">Tarde<small>5:00–6:30 PM</small></div>
+        <div class="horario" data-h="tarde1">Tarde 1<small>2:00–4:00 PM</small></div>
+        <div class="horario" data-h="tarde2">Tarde 2<small>4:15–6:15 PM</small></div>
       </div>`;
     // toggle día
     div.querySelector(".dia-top").addEventListener("click", ()=>{
@@ -949,7 +951,16 @@ async function inscribir(){
 }
 
 function nombreSesion(id){ const s = SESIONES.find(x=>x.id===id); return s?s.dia:id; }
-function etiquetaHorario(h){ return h==="tarde" ? "Tarde (5:00–6:30 PM)" : "Mañana (9:00–11:00 AM)"; }
+function etiquetaHorario(h){
+  if(h==="tarde1") return "Tarde 1 (2:00–4:00 PM)";
+  if(h==="tarde2") return "Tarde 2 (4:15–6:15 PM)";
+  return "Mañana (9:00–11:00 AM)";
+}
+function horarioCorto(h){
+  if(h==="tarde1") return "T1";
+  if(h==="tarde2") return "T2";
+  return "AM";
+}
 
 function mostrarExito(data){
   formBox.style.display = "none";
@@ -979,7 +990,7 @@ async function pintarAdmin(){
   const tb = $("tbody");
   if(lista.length===0){ tb.innerHTML = `<tr><td colspan="6" class="vacio">Aún no hay inscripciones.</td></tr>`; return; }
   tb.innerHTML = lista.map(x=>{
-    const ses = Object.entries(x.sesiones||{}).map(([id,h])=>`${id.toUpperCase()}·${h==="tarde"?"PM":"AM"}`).join(", ");
+    const ses = Object.entries(x.sesiones||{}).map(([id,h])=>`${id.toUpperCase()}·${horarioCorto(h)}`).join(", ");
     const f = new Date(x.fecha).toLocaleDateString("es-MX",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
     return `<tr><td><span class="mono">${x.num}</span></td><td>${x.nombre}</td><td>${x.departamento}</td><td>${x.direccion}</td><td>${ses}</td><td>${f}</td></tr>`;
   }).join("");
@@ -990,7 +1001,13 @@ async function exportarCSV(){
   lista.sort((a,b)=> (a.fecha<b.fecha?1:-1));
   const head = ["Numero","Nombre","Departamento","Direccion","Lunes","Martes","Miercoles","Jueves","Viernes","FechaInscripcion"];
   const rows = lista.map(x=>{
-    const g = id => x.sesiones && x.sesiones[id] ? (x.sesiones[id]==="tarde"?"Tarde":"Mañana") : "";
+    const g = id => {
+      const h = x.sesiones && x.sesiones[id];
+      if(!h) return "";
+      if(h==="tarde1") return "Tarde 1";
+      if(h==="tarde2") return "Tarde 2";
+      return "Mañana";
+    };
     return [x.num,x.nombre,x.departamento,x.direccion,g("lun"),g("mar"),g("mie"),g("jue"),g("vie"),new Date(x.fecha).toLocaleString("es-MX")].map(csvEscape).join(",");
   });
   const csv = "\uFEFF" + [head.join(","), ...rows].join("\n");
