@@ -1,1 +1,1047 @@
+<!--
+  FORMULARIO DE INSCRIPCIÓN — SEMANA TI · CAFIVER
+  - Mobile-first (pensado para escanear QR y abrir en celular)
+  - Búsqueda por número de empleado (LLAVE única)
+  - Autocompleta datos del empleado
+  - Control de inscripción sin duplicados (key = número de empleado)
+  - Panel de administrador para ver / exportar inscritos
+-->
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta charset="utf-8">
+<script>
+  /* Garantiza el viewport aunque el archivo se sirva como página suelta (QR) */
+  (function(){
+    if(!document.querySelector('meta[name=viewport]')){
+      var m=document.createElement('meta');
+      m.name='viewport';
+      m.content='width=device-width, initial-scale=1, viewport-fit=cover';
+      document.head && document.head.appendChild(m);
+    }
+  })();
+</script>
+<style>
+  /* ====== Tipografía ====== */
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap');
 
+  :root{
+    --azul:#1652f0;
+    --azul-osc:#0b2e8a;
+    --naranja:#f15a22;
+    --verde:#3aa935;
+    --purpura:#7b3fb5;
+    --tinta:#0e1116;
+    --gris:#5b6573;
+    --linea:#e3e7ee;
+    --panel:#ffffff;
+    --fondo:#eef1f6;
+    --suave:#f5f7fb;
+    --ok:#1f9d55;
+    --err:#d23b3b;
+    --sombra:0 10px 30px rgba(14,17,22,.10);
+    --sombra-sm:0 3px 12px rgba(14,17,22,.08);
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:'Space Grotesk',system-ui,sans-serif;
+    color:var(--tinta);
+    background:
+      radial-gradient(900px 500px at 110% -10%, rgba(22,82,240,.10), transparent 60%),
+      radial-gradient(700px 500px at -10% 110%, rgba(241,90,34,.08), transparent 55%),
+      var(--fondo);
+    background-attachment:fixed;
+    line-height:1.45;
+    -webkit-text-size-adjust:100%;
+  }
+
+  .wrap{max-width:560px;margin:0 auto;padding:16px 14px 60px}
+
+  /* ====== Encabezado ====== */
+  .hero{
+    background:linear-gradient(180deg,#0e1116, #14181f);
+    border-radius:22px;
+    padding:22px 18px 18px;
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+    box-shadow:var(--sombra);
+  }
+  .hero::before{
+    content:"";position:absolute;inset:0;
+    background-image:
+      linear-gradient(90deg, rgba(22,82,240,.25) 1px, transparent 1px),
+      linear-gradient(rgba(241,90,34,.18) 1px, transparent 1px);
+    background-size:26px 26px;
+    -webkit-mask-image:radial-gradient(120% 90% at 80% 0%, #000 30%, transparent 75%);
+            mask-image:radial-gradient(120% 90% at 80% 0%, #000 30%, transparent 75%);
+    opacity:.6;
+  }
+  .hero > *{position:relative;z-index:1}
+  .badge-marca{
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:10px;letter-spacing:.32em;text-transform:uppercase;
+    color:#7d8aa0;font-weight:500;margin-bottom:14px;
+  }
+  .badge-marca .dot{width:6px;height:6px;border-radius:50%;background:var(--naranja)}
+  .titulo{
+    font-weight:300;line-height:.9;letter-spacing:-.02em;
+    font-size:clamp(38px,12vw,52px);margin:0;
+  }
+  .titulo .ti{
+    font-weight:600;color:#3d79ff;
+  }
+  .titulo .punto{font-weight:200;color:#fff}
+  .hero-rule{
+    margin-top:16px;height:1px;
+    background:linear-gradient(90deg,var(--azul),transparent);
+  }
+  .tags{
+    margin-top:14px;display:flex;flex-wrap:wrap;gap:6px;
+  }
+  .tag{
+    font-size:11px;font-weight:400;letter-spacing:.03em;
+    color:#aeb8c6;
+  }
+  .tag::after{content:"·";margin-left:6px;color:#475063}
+  .tag:last-child::after{content:""}
+  .t1,.t2,.t3,.t4{background:none}
+
+  .fecha-pill{
+    margin-top:16px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap;
+  }
+  .fecha-pill .mes{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:#7d8aa0;font-weight:500}
+  .fecha-pill .rango{font-size:30px;font-weight:300;color:#fff;letter-spacing:.01em;font-variant-numeric:tabular-nums}
+  .fecha-pill .anio{font-size:12px;color:#7d8aa0;font-weight:300}
+  .fecha-pill .h{
+    width:100%;margin-top:8px;
+    font-size:11px;color:#8b94a3;font-weight:400;letter-spacing:.02em;
+  }
+
+  /* ====== Tarjetas ====== */
+  .card{
+    background:var(--panel);border:1px solid var(--linea);border-radius:18px;
+    padding:18px 16px;margin-top:14px;box-shadow:var(--sombra-sm);
+  }
+  .card h2{
+    margin:0 0 4px;font-size:18px;font-weight:600;letter-spacing:-.01em;
+    display:flex;align-items:center;gap:8px;
+  }
+  .card h2 .num{
+    background:var(--azul);color:#fff;width:24px;height:24px;border-radius:8px;
+    display:inline-flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;flex:0 0 auto;
+  }
+  .card .sub{color:var(--gris);font-size:13px;margin:0 0 14px}
+
+  label{display:block;font-size:11px;font-weight:500;letter-spacing:.14em;color:var(--gris);text-transform:uppercase;margin:0 0 6px}
+
+  .emp-row{display:flex;gap:8px}
+  input[type=text], input[type=password], select{
+    width:100%;font-family:inherit;font-size:16px;color:var(--tinta);
+    background:var(--suave);border:1.5px solid var(--linea);border-radius:12px;
+    padding:13px 13px;outline:none;transition:border-color .15s, background .15s, box-shadow .15s;
+  }
+  #empNum{font-family:'Space Mono',monospace;font-weight:700;letter-spacing:.08em}
+  input:focus, select:focus{border-color:var(--azul);background:#fff;box-shadow:0 0 0 4px rgba(22,82,240,.12)}
+
+  .btn{
+    font-family:inherit;font-weight:600;font-size:15px;letter-spacing:.01em;
+    border:none;border-radius:12px;padding:13px 16px;cursor:pointer;
+    transition:transform .08s, filter .15s, opacity .15s;display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn-azul{background:var(--azul);color:#fff}
+  .btn-azul:hover{filter:brightness(1.07)}
+  .btn-buscar{flex:0 0 auto;padding:13px 18px}
+  .btn-full{width:100%}
+  .btn-naranja{background:var(--naranja);color:#fff}
+  .btn-ghost{background:#fff;color:var(--tinta);border:1.5px solid var(--linea)}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+
+  .hint{font-size:12px;color:var(--gris);margin-top:8px}
+
+  /* mensaje de búsqueda */
+  .msg{margin-top:10px;font-size:13.5px;font-weight:600;border-radius:10px;padding:10px 12px;display:none}
+  .msg.show{display:block}
+  .msg.err{background:#fdecec;color:var(--err);border:1px solid #f6c9c9}
+  .msg.ok{background:#e9f7ee;color:var(--ok);border:1px solid #b9e6c8}
+  .msg.info{background:#eaf0ff;color:var(--azul-osc);border:1px solid #c7d6ff}
+
+  /* ficha empleado */
+  .ficha{display:none;margin-top:14px;border:1.5px dashed #c7d6ff;background:#f4f8ff;border-radius:14px;padding:14px}
+  .ficha.show{display:block;animation:pop .25s ease}
+  @keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+  .ficha .nombre{font-size:19px;font-weight:600;letter-spacing:-.01em;line-height:1.15}
+  .ficha .meta{margin-top:8px;display:flex;flex-wrap:wrap;gap:7px}
+  .chip{font-size:12px;font-weight:500;background:#fff;border:1px solid var(--linea);border-radius:999px;padding:5px 11px;color:var(--gris)}
+  .chip b{color:var(--tinta);font-weight:600}
+  .chip.num{font-family:'Space Mono',monospace;color:var(--azul);border-color:#c7d6ff;background:#eaf0ff}
+
+  /* sesiones */
+  .dias{display:grid;gap:10px;margin-top:4px}
+  .dia{
+    border:1.5px solid var(--linea);border-radius:14px;padding:12px;background:#fff;
+    transition:border-color .15s, box-shadow .15s, background .15s;cursor:pointer;display:block;
+  }
+  .dia.sel{border-color:var(--azul);box-shadow:0 0 0 3px rgba(22,82,240,.10);background:#fbfcff}
+  .dia-top{display:flex;align-items:center;gap:10px}
+  .dia .check{
+    width:22px;height:22px;border-radius:7px;border:2px solid var(--linea);flex:0 0 auto;
+    display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:13px;transition:.15s;
+  }
+  .dia.sel .check{background:var(--azul);border-color:var(--azul)}
+  .dia .info{flex:1;min-width:0}
+  .dia .d{font-weight:600;font-size:15px}
+  .dia .tema{font-size:12.5px;color:var(--gris);font-weight:400}
+  .dia .pill{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;color:#fff;font-family:'Space Mono',monospace}
+  .pL{background:var(--azul)}.pM{background:var(--azul)}.pX{background:var(--verde)}.pJ{background:#0a66c2}.pV{background:var(--purpura)}
+
+  .horarios{display:none;gap:6px;margin-top:10px}
+  .dia.sel .horarios{display:flex}
+  .horario{
+    flex:1;text-align:center;font-size:12.5px;font-weight:500;border:1.5px solid var(--linea);
+    border-radius:10px;padding:9px 4px;background:var(--suave);color:var(--gris);cursor:pointer;transition:.12s;
+    min-width:0;
+  }
+  .horario.on{background:var(--naranja);border-color:var(--naranja);color:#fff}
+  .horario small{display:block;font-weight:400;font-size:9.5px;opacity:.85;margin-top:2px;letter-spacing:0;white-space:nowrap}
+
+  .acciones{display:flex;flex-direction:column;gap:8px;margin-top:6px}
+
+  /* éxito */
+  .exito{display:none;text-align:center;padding:8px 4px}
+  .exito.show{display:block;animation:pop .3s ease}
+  .exito .ico{
+    width:64px;height:64px;border-radius:50%;background:var(--verde);color:#fff;
+    display:inline-flex;align-items:center;justify-content:center;font-size:34px;margin-bottom:8px;
+    box-shadow:0 8px 20px rgba(58,169,53,.35);
+  }
+  .exito h2{justify-content:center}
+  .resumen{text-align:left;background:var(--suave);border:1px solid var(--linea);border-radius:14px;padding:14px;margin:14px 0}
+  .resumen .r{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px dashed var(--linea);font-size:14px}
+  .resumen .r:last-child{border-bottom:none}
+  .resumen .r span:first-child{color:var(--gris);font-weight:400}
+  .resumen .r span:last-child{font-weight:500;text-align:right}
+
+  /* footer / lema */
+  .lema{
+    text-align:center;margin:20px 6px 0;color:var(--gris);font-size:12.5px;font-weight:400;letter-spacing:.02em;
+  }
+  .lema .b{color:var(--azul);font-weight:500}
+
+  /* admin */
+  .admin-link{display:block;text-align:center;margin-top:18px;color:var(--gris);font-size:12px;text-decoration:underline;cursor:pointer;background:none;border:none;width:100%}
+  .admin-panel{display:none}
+  .admin-panel.show{display:block}
+  .stat-row{display:flex;gap:8px;margin-bottom:12px}
+  .stat{flex:1;background:var(--suave);border:1px solid var(--linea);border-radius:12px;padding:12px;text-align:center}
+  .stat .n{font-size:24px;font-weight:500;color:var(--azul);font-family:'Space Mono',monospace}
+  .stat .l{font-size:10.5px;color:var(--gris);font-weight:500;text-transform:uppercase;letter-spacing:.08em}
+  .tabla-wrap{overflow:auto;border:1px solid var(--linea);border-radius:12px;max-height:380px}
+  table{border-collapse:collapse;width:100%;font-size:12.5px;min-width:520px}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--linea);white-space:nowrap}
+  th{background:var(--suave);position:sticky;top:0;font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--gris)}
+  td .mono{font-family:'Space Mono',monospace;color:var(--azul);font-weight:400}
+  .vacio{text-align:center;color:var(--gris);padding:24px;font-size:13px}
+
+  .loader{display:inline-block;width:16px;height:16px;border:2.5px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .nube{font-size:11px;color:var(--gris);text-align:center;margin-top:10px}
+
+  /* Teléfonos pequeños (≤360px) */
+  @media (max-width:360px){
+    .wrap{padding:12px 10px 50px}
+    .card{padding:16px 13px}
+    .dia .pill{display:none}            /* la etiqueta del día se oculta para dar espacio */
+    .titulo{font-size:38px}
+    .fecha-pill .rango{font-size:26px}
+    .horario small{font-size:10px}
+  }
+  /* Respeta a quien prefiere menos animación */
+  @media (prefers-reduced-motion:reduce){
+    *{animation:none !important;transition:none !important}
+  }
+</style>
+
+<div class="wrap">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="badge-marca"><span class="dot"></span> Cafiver · Est. 1985</div>
+    <h1 class="titulo">SEMANA <span class="ti">TI</span><span class="punto">.</span></h1>
+    <div class="hero-rule"></div>
+    <div class="tags">
+      <span class="tag">SAP</span>
+      <span class="tag">IA</span>
+      <span class="tag">Microsoft 365</span>
+      <span class="tag">Ciberseguridad</span>
+    </div>
+    <div class="fecha-pill">
+      <span class="mes">Junio</span>
+      <span class="rango">15—19</span>
+      <span class="anio">2026</span>
+      <span class="h">Mañana 9:00–11:00 AM · Tarde 1 2:00–4:00 PM · Tarde 2 4:15–6:15 PM</span>
+    </div>
+  </div>
+
+  <!-- ===== FORMULARIO ===== -->
+  <div id="form">
+
+    <!-- Paso 1: número de empleado -->
+    <div class="card">
+      <h2><span class="num">1</span> Tu número de empleado</h2>
+      <p class="sub">Es tu llave de inscripción. Escríbelo y presiona buscar.</p>
+      <label for="empNum">Número de empleado</label>
+      <div class="emp-row">
+        <input type="text" id="empNum" inputmode="numeric" autocomplete="off" placeholder="Ej. 50813" maxlength="10">
+        <button class="btn btn-azul btn-buscar" id="btnBuscar">Buscar</button>
+      </div>
+      <div class="msg" id="msgBuscar"></div>
+
+      <!-- Ficha del empleado -->
+      <div class="ficha" id="ficha">
+        <div class="nombre" id="fNombre"></div>
+        <div class="meta">
+          <span class="chip num">#<b id="fNum"></b></span>
+          <span class="chip">Depto: <b id="fDepto"></b></span>
+          <span class="chip">Dirección: <b id="fDir"></b></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 2: sesiones -->
+    <div class="card" id="cardSesiones" style="opacity:.5;pointer-events:none">
+      <h2><span class="num">2</span> Elige tus sesiones</h2>
+      <p class="sub">Marca los días a los que asistirás y tu horario en cada uno.</p>
+      <div class="dias" id="dias"></div>
+    </div>
+
+    <!-- Paso 3: confirmar -->
+    <div class="card" id="cardConfirmar" style="opacity:.5;pointer-events:none">
+      <h2><span class="num">3</span> Confirmar inscripción</h2>
+      <p class="sub">Revisa que tus datos sean correctos antes de enviar.</p>
+      <div class="acciones">
+        <button class="btn btn-naranja btn-full" id="btnInscribir" disabled>Confirmar mi inscripción</button>
+      </div>
+      <div class="msg" id="msgFinal"></div>
+      <div class="nube">🔒 Tu inscripción se guarda con tu número de empleado en la base oficial. No se permiten duplicados.</div>
+    </div>
+
+  </div>
+
+  <!-- ===== ÉXITO ===== -->
+  <div class="card exito" id="exito">
+    <div class="ico">✓</div>
+    <h2>¡Inscripción confirmada!</h2>
+    <p class="sub" style="text-align:center" id="exitoSub"></p>
+    <div class="resumen" id="resumen"></div>
+    <div class="acciones">
+      <button class="btn btn-ghost btn-full" id="btnEditar">Editar mi inscripción</button>
+    </div>
+  </div>
+
+  <p class="lema">La tecnología nos mueve, el café nos conecta.<br><span class="b">Pasión que se comparte, tecnología que transforma.</span></p>
+
+  <button class="admin-link" id="adminLink">Acceso administrador</button>
+
+  <!-- ===== ADMIN ===== -->
+  <div class="card admin-panel" id="adminPanel">
+    <h2 style="margin-bottom:12px">Panel de inscripciones</h2>
+    <div id="adminLogin">
+      <label for="adminPass">Contraseña</label>
+      <input type="password" id="adminPass" placeholder="••••••••">
+      <div class="msg" id="msgAdmin"></div>
+      <div class="acciones" style="margin-top:10px">
+        <button class="btn btn-azul btn-full" id="btnAdminEntrar">Entrar</button>
+        <button class="btn btn-ghost btn-full" id="btnAdminCerrar">Volver al formulario</button>
+      </div>
+      <p class="hint">Los datos se guardan en tu Google Sheet. Este panel es una vista rápida; el reporte completo lo tienes en la hoja.</p>
+    </div>
+
+    <div id="adminData" style="display:none">
+      <div class="stat-row">
+        <div class="stat"><div class="n" id="stTotal">0</div><div class="l">Inscritos</div></div>
+        <div class="stat"><div class="n" id="stSesiones">0</div><div class="l">Sesiones</div></div>
+      </div>
+      <div class="acciones" style="flex-direction:row;gap:8px;margin-bottom:12px">
+        <button class="btn btn-azul" style="flex:1" id="btnCSV">⬇ Exportar CSV</button>
+        <button class="btn btn-ghost" style="flex:1" id="btnRefrescar">↻ Refrescar</button>
+      </div>
+      <div class="tabla-wrap">
+        <table id="tabla">
+          <thead><tr><th>#</th><th>Nombre</th><th>Depto</th><th>Dir.</th><th>Sesiones</th><th>Fecha</th></tr></thead>
+          <tbody id="tbody"></tbody>
+        </table>
+      </div>
+      <button class="btn btn-ghost btn-full" id="btnAdminSalir" style="margin-top:12px">Cerrar sesión</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+/* ============================================================
+   1) BASE DE DATOS DE EMPLEADOS  (LLAVE = número de empleado)
+   ------------------------------------------------------------
+   👉 Reemplaza este objeto con tu base real. Formato:
+      "NUMERO": { nombre, departamento, direccion }
+   ============================================================ */
+const EMPLEADOS = {
+  "50001": { nombre:"Maria Elena Acevedo Hernandez", departamento:"Dirección General", direccion:"Direccion General" },
+  "50007": { nombre:"Adelinda Arguello Medina", departamento:"Planta CS Producción", direccion:"Direccion Tecnica" },
+  "50009": { nombre:"Edda Baston Cruz", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50032": { nombre:"Martin Edmundo Garate Sanchez", departamento:"Almacen General", direccion:"Direccion Tecnica" },
+  "50038": { nombre:"Marcela Kikey Ibañez Huerta", departamento:"Administracion General", direccion:"Direccion CoffeeServ" },
+  "50046": { nombre:"Eloy Rafael Merced Carrillo", departamento:"Administracion General", direccion:"Direccion CoffeeServ" },
+  "50061": { nombre:"Arturo Rodriguez Hernandez", departamento:"Instrumentacion y Control", direccion:"Direccion Tecnica" },
+  "50062": { nombre:"Rober Rojas Jarquin", departamento:"Mantenimiento", direccion:"Direccion Tecnica" },
+  "50069": { nombre:"Juan Sanchez Carmona", departamento:"Oficina Puebla", direccion:"Direccion CoffeeServ" },
+  "50078": { nombre:"Marisol Vazquez Castillo", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "50090": { nombre:"Maria Elena Caracas Torales", departamento:"Administracion General", direccion:"Direccion CoffeeServ" },
+  "50094": { nombre:"Carlos Eumir Rodriguez Ramirez", departamento:"Comercialización", direccion:"Direccion Comercial" },
+  "50096": { nombre:"Hector Manuel Covarrubias Cornejo", departamento:"Mantenimiento", direccion:"Direccion Tecnica" },
+  "50135": { nombre:"Antonio Ortega Cortes", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50149": { nombre:"Jose Antonio Correa Sanchez", departamento:"Oficina Vallarta", direccion:"Direccion CoffeeServ" },
+  "50153": { nombre:"Luis Calderon Garcia", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50177": { nombre:"Juan Arguelles Juarez", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50197": { nombre:"Jose Zuam Caamal Lizama", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "50206": { nombre:"Mauricio Montalvo Guevara", departamento:"Oficina Orizaba", direccion:"Direccion CoffeeServ" },
+  "50214": { nombre:"Julieta Flores Lopez", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "50223": { nombre:"Maria Yazmin Rodriguez Hernandez", departamento:"Comercialización", direccion:"Direccion Comercial" },
+  "50225": { nombre:"Valeria Giovanny Lopez Olmedo", departamento:"Tecnologia de Información", direccion:"Direccion Admiva" },
+  "50228": { nombre:"Marco Antonio Gutierrez Lopez", departamento:"Almacen General", direccion:"Direccion Tecnica" },
+  "50239": { nombre:"Valentin Martinez Morales", departamento:"Almacen General", direccion:"Direccion Tecnica" },
+  "50240": { nombre:"Medardo Ezequiel Lopez Rivas", departamento:"Dirección Tecnica", direccion:"Direccion Tecnica" },
+  "50244": { nombre:"Francisco Herrerias Garcia", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50247": { nombre:"Guillermo Gomez Rodriguez", departamento:"Procesos y Proyectos", direccion:"Direccion Tecnica" },
+  "50255": { nombre:"Octavio Ramirez Baez", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50258": { nombre:"Eduardo Armenta Arteaga", departamento:"Dirección General", direccion:"Direccion General" },
+  "50260": { nombre:"Isael Diaz Sanchez", departamento:"Cadena de Suministro", direccion:"Direccion General" },
+  "50261": { nombre:"Marcelo Ramirez Panzo", departamento:"Catación Planta", direccion:"Direccion General" },
+  "50265": { nombre:"Angel del Carmen Solis", departamento:"Mantenimiento", direccion:"Direccion Tecnica" },
+  "50269": { nombre:"Javier Antonio Hernandez Palaceto", departamento:"Instrumentacion y Control", direccion:"Direccion Tecnica" },
+  "50277": { nombre:"Laura Olivia Abdala Gutierrez", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "50278": { nombre:"Abimelek Muñoz Rodriguez", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50279": { nombre:"Rafael Octavio Cruz Fuentes", departamento:"Planta CS Producción", direccion:"Direccion Tecnica" },
+  "50280": { nombre:"Jose Luis Hernandez Ramirez", departamento:"Planta Aglomerado", direccion:"Direccion Tecnica" },
+  "50290": { nombre:"Jose Luis Lazaro Xitlama", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50293": { nombre:"Nicolas Tehuintle Tetlatle", departamento:"Oficina Orizaba", direccion:"Direccion CoffeeServ" },
+  "50305": { nombre:"Carlos Eduardo Lopez Romero", departamento:"Direccion Comercial", direccion:"Direccion Comercial" },
+  "50309": { nombre:"Edgar Tomas Rojo Reyes", departamento:"Catación Planta", direccion:"Direccion General" },
+  "50350": { nombre:"Nestor Dali Santiago Altamirano", departamento:"Planta Aglomerado", direccion:"Direccion Tecnica" },
+  "50356": { nombre:"Valentin Flores Diaz", departamento:"Planta Descafeinado", direccion:"Direccion Tecnica" },
+  "50362": { nombre:"Daniel Morales Martinez", departamento:"Oficina Orizaba", direccion:"Direccion CoffeeServ" },
+  "50364": { nombre:"Jose Manuel Avila Castro", departamento:"Procesos y Proyectos", direccion:"Direccion Tecnica" },
+  "50367": { nombre:"Isidoro Ricardo Calamateo Villegas", departamento:"Oficina Guadalajara", direccion:"Direccion CoffeeServ" },
+  "50369": { nombre:"Noe Cabrera Hernandez", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "50374": { nombre:"Laura Aracely Heredia Barreda", departamento:"Gestion de la Calidad", direccion:"Direccion General" },
+  "50382": { nombre:"Martin Bello Lozada", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50383": { nombre:"Eusebio Olmos Basilio", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50385": { nombre:"Luciano Rojas Molina", departamento:"Planta Aglomerado", direccion:"Direccion Tecnica" },
+  "50391": { nombre:"Kristel Angeles Gallegos", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50401": { nombre:"Edgar Gutierrez Cruz", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50404": { nombre:"Ernesto Omar Balvin Camacho", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50414": { nombre:"Janette Garcia Peralta", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50415": { nombre:"Alain Gustavo Escamilla Sandoval", departamento:"Planta CS Producción", direccion:"Direccion Tecnica" },
+  "50420": { nombre:"Cristobal Espindola Dominguez", departamento:"Instrumentacion y Control", direccion:"Direccion Tecnica" },
+  "50427": { nombre:"Francisco Simon Beltran", departamento:"Comercialización", direccion:"Direccion Comercial" },
+  "50428": { nombre:"Felipe Hernandez Gonzalez", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "50429": { nombre:"Estela De Jesus Cortez", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50433": { nombre:"Hector Ivan Santiago Cruz", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50437": { nombre:"Alan Osorio Cruz", departamento:"Tecnologia de Información", direccion:"Direccion Admiva" },
+  "50438": { nombre:"Fernando Omar Arrevillaga Aranda", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50439": { nombre:"Guillermo Roman Aguilar", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50459": { nombre:"Jose Jaurez Garcia", departamento:"Oficina Los Cabos", direccion:"Direccion CoffeeServ" },
+  "50461": { nombre:"Moises Enrique Arrevillaga Aranda", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50466": { nombre:"Julio Baltazar Uc Chan", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "50475": { nombre:"Joel Abiel Ramirez", departamento:"Mantenimiento", direccion:"Direccion Tecnica" },
+  "50476": { nombre:"Manuel Mendez Martinez", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "50479": { nombre:"Ernesto De Jesus Montes", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "50498": { nombre:"Julio Cesar Hernandez Garcia", departamento:"Mercadotecnia", direccion:"Direccion General" },
+  "50502": { nombre:"Sergio Antonio Sanchez Montalvo", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50503": { nombre:"Nancy Lopez Huerta", departamento:"Catación Planta", direccion:"Direccion General" },
+  "50505": { nombre:"Leonardo de Jesus Velasco Cruz", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50517": { nombre:"Adrian Guerrero Hernandez", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50527": { nombre:"Manuel de Jesus Moreno Hurtado", departamento:"Oficina Guadalajara", direccion:"Direccion CoffeeServ" },
+  "50528": { nombre:"Felipe de Jesus Villa Riveroll", departamento:"Administracion General", direccion:"Direccion CoffeeServ" },
+  "50530": { nombre:"Guadalupe Monserrat Herrera Hernandez", departamento:"Comercialización", direccion:"Direccion Comercial" },
+  "50543": { nombre:"Ruben Arias Santiago", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "50545": { nombre:"Diego Armando Mendez Silva", departamento:"Servicios Generales", direccion:"Direccion Tecnica" },
+  "50547": { nombre:"Hernan Santiago Puch Polanco", departamento:"Oficina Merida", direccion:"Direccion CoffeeServ" },
+  "50561": { nombre:"Valente Clemente Ixmatlahua", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "50563": { nombre:"Alfonso Rafael Soto Reyna", departamento:"Comercialización", direccion:"Direccion Comercial" },
+  "50581": { nombre:"Eugenia Pulido Osorno", departamento:"Oficina Orizaba", direccion:"Direccion CoffeeServ" },
+  "50582": { nombre:"Wendy Perez Angeles", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50593": { nombre:"Juan Carlos Villacis Sotomayor", departamento:"Dirección General", direccion:"Direccion General" },
+  "50598": { nombre:"Mariana Olmos Ortega", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "50603": { nombre:"Ruben Erick Beltran Muñoz", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "50605": { nombre:"Oscar David Palma Gomez", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "50607": { nombre:"Enrique Alvarez Pliego", departamento:"Ingenieria del Producto", direccion:"Direccion Comercial" },
+  "50608": { nombre:"Silvana Lorena Ajuria Ojeda", departamento:"Recursos Humanos", direccion:"Direccion General" },
+  "50617": { nombre:"Isis Marissa Rangel Esponda", departamento:"Recursos Humanos", direccion:"Direccion General" },
+  "50622": { nombre:"Juan Carlos Covarrubias Enriquez", departamento:"Oficina Guadalajara", direccion:"Direccion CoffeeServ" },
+  "50625": { nombre:"Julio Cesar Ortiz Avila", departamento:"Comercialización", direccion:"Direccion Comercial" },
+  "50633": { nombre:"Norma Perez Sengua", departamento:"Oficina Guadalajara", direccion:"Direccion CoffeeServ" },
+  "50646": { nombre:"Francisco Ivan Cajica Morales", departamento:"Procesos y Proyectos", direccion:"Direccion Tecnica" },
+  "50654": { nombre:"Jose Manuel Huerta Ramirez", departamento:"Almacen de Refacciones", direccion:"Direccion Admiva" },
+  "50655": { nombre:"Joel Enrique Guzman Namorado", departamento:"Almacen de Insumos CS", direccion:"Direccion Admiva" },
+  "50661": { nombre:"Youssef Hernandez Majluf", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "50663": { nombre:"Lidia Monserrat Merino Espinoza", departamento:"Comercialización", direccion:"Direccion Comercial" },
+  "50667": { nombre:"Emmanuel Tapia Salinas", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50677": { nombre:"Samuel Cortes Beltran", departamento:"Planta Aglomerado", direccion:"Direccion Tecnica" },
+  "50682": { nombre:"Gregorio Aguilar Garcia", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "50696": { nombre:"Miguel Angel Morales Carrizal", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "50697": { nombre:"Roberto Rojas Lopez", departamento:"Cadena de Suministro", direccion:"Direccion General" },
+  "50700": { nombre:"Laura Monserrat Cuevas Palacios", departamento:"Planta CS Producción", direccion:"Direccion Tecnica" },
+  "50701": { nombre:"Esmeralda Elizabeth Bravo Palacios", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50704": { nombre:"Angel Daniel Jimenez Porras", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50707": { nombre:"Hector Bello Lozada", departamento:"Administracion General", direccion:"Direccion CoffeeServ" },
+  "50710": { nombre:"Paul Herrera Cintora", departamento:"Compras", direccion:"Direccion Admiva" },
+  "50712": { nombre:"Maria Concepcion Martinez Zompaxtle", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50719": { nombre:"Luis Angel Valencia Juarez", departamento:"Administracion General", direccion:"Direccion CoffeeServ" },
+  "50734": { nombre:"Alejandra Flores Santos", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50735": { nombre:"Benigno Gomez Martinez", departamento:"Almacen de Refacciones", direccion:"Direccion Admiva" },
+  "50740": { nombre:"Ari Missael Feria Ramirez", departamento:"Administracion General", direccion:"Direccion CoffeeServ" },
+  "50745": { nombre:"Maria Isabel Santiago San Juan", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50746": { nombre:"Elizabeth Martinez Sanchez", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50754": { nombre:"Francisco Castañeda Castillo", departamento:"Administracion General", direccion:"Direccion CoffeeServ" },
+  "50755": { nombre:"Lidia Altamirano Mariano", departamento:"Catación Planta", direccion:"Direccion General" },
+  "50758": { nombre:"Juan de Dios Sarabia Cortez", departamento:"Oficina Guadalajara", direccion:"Direccion CoffeeServ" },
+  "50764": { nombre:"Carmen Keyla Xotlanihua Juarez", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "50766": { nombre:"Luis Octavio Ramos Exzacarias", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "50767": { nombre:"Donaji Graciela Vicenteño Olguin", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "50776": { nombre:"Gabriela Perez Sandoval", departamento:"Procesos y Proyectos", direccion:"Direccion Tecnica" },
+  "50781": { nombre:"Gustavo Camarillo Martinez", departamento:"Cadena de Suministro", direccion:"Direccion General" },
+  "50782": { nombre:"Juana Bravo Hernandez", departamento:"Autoservicio y Mayoreo", direccion:"Direccion Comerc Nal" },
+  "50785": { nombre:"Ana Jessica Velazquez Cruz", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50787": { nombre:"Alfredo Caballero Najera", departamento:"Administracion General", direccion:"Direccion CoffeeServ" },
+  "50790": { nombre:"Luis Aguilar Gastelu", departamento:"Recursos Humanos", direccion:"Direccion General" },
+  "50793": { nombre:"Uriel Sanchez Lopez", departamento:"Autoservicio y Mayoreo", direccion:"Direccion Comerc Nal" },
+  "50795": { nombre:"Moises Mendoza Corona", departamento:"Oficina Los Cabos", direccion:"Direccion CoffeeServ" },
+  "50796": { nombre:"Rafael Aguila Gonzalez", departamento:"Tecnologia de Información", direccion:"Direccion Admiva" },
+  "50802": { nombre:"Martin Reyes De los Santos", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "50806": { nombre:"Juan Lopez Laureano", departamento:"Almacen General", direccion:"Direccion Tecnica" },
+  "50807": { nombre:"Eduardo Martinez Romero", departamento:"Planta Envasado Frasco", direccion:"Direccion Tecnica" },
+  "50810": { nombre:"Guadalupe Castro Hernandez", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50811": { nombre:"Fermin Medina Chico", departamento:"Mantenimiento", direccion:"Direccion Tecnica" },
+  "50813": { nombre:"Juan Roberto Amaya Rodriguez", departamento:"Tecnologia de Información", direccion:"Direccion Admiva" },
+  "50814": { nombre:"Beatriz Adriana Hernandez Lopez", departamento:"Autoservicio y Mayoreo", direccion:"Direccion Comerc Nal" },
+  "50815": { nombre:"Eduardo Narvaez Valerdi", departamento:"Seguridad Industrial", direccion:"Direccion Tecnica" },
+  "50816": { nombre:"Daniel Gonzalez Cruz", departamento:"Seguridad Industrial", direccion:"Direccion Tecnica" },
+  "50822": { nombre:"Fortino Carrera Rojas", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50825": { nombre:"Maria Lizeth Lopez Jimenez", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "50828": { nombre:"Juan Tomas Zacarias Campos", departamento:"Seguridad Industrial", direccion:"Direccion Tecnica" },
+  "50830": { nombre:"Ilse Graciela Perea Moreno", departamento:"Comercialización", direccion:"Direccion Comercial" },
+  "50834": { nombre:"William Ignacio Hernandez Merlo", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50841": { nombre:"Julieta Alvarez Villar", departamento:"Comercio Electronico", direccion:"Direccion Comerc Nal" },
+  "50844": { nombre:"Yuri Karla Jacqueline Luna Ortega", departamento:"Mantenimiento", direccion:"Direccion Tecnica" },
+  "50854": { nombre:"Diana Monserrat Susano Toris", departamento:"Compras", direccion:"Direccion Admiva" },
+  "50855": { nombre:"Ricardo Arcadio Brandi Chavarria", departamento:"Comercio Electronico", direccion:"Direccion Comerc Nal" },
+  "50858": { nombre:"Vianey Marisol Reyes Alvarez", departamento:"Oficina Orizaba", direccion:"Direccion CoffeeServ" },
+  "50860": { nombre:"Luis Enrique Ramirez Juarez", departamento:"Cadena de Suministro", direccion:"Direccion General" },
+  "50864": { nombre:"Aaron Huerta Cruz", departamento:"Planta Envasado Frasco", direccion:"Direccion Tecnica" },
+  "50866": { nombre:"Lina Maria Castro Salas", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50870": { nombre:"Ariana Sanchez Gamez", departamento:"Gestion de la Calidad", direccion:"Direccion General" },
+  "50873": { nombre:"Daniela Gomez Aleluya", departamento:"Tecnologia de Información", direccion:"Direccion Admiva" },
+  "50875": { nombre:"Manuel Concepcion Sanchez Canche", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "50893": { nombre:"Arely Denis Lopez Delgado", departamento:"Comercialización", direccion:"Direccion Comercial" },
+  "50894": { nombre:"Crhistian Hernandez Gutierrez", departamento:"Planta Aglomerado", direccion:"Direccion Tecnica" },
+  "50895": { nombre:"Miguel Angel Martinez Onofre", departamento:"Planta Aglomerado", direccion:"Direccion Tecnica" },
+  "50898": { nombre:"Eduardo Antonio Bautista Luna", departamento:"Oficina Queretaro", direccion:"Direccion CoffeeServ" },
+  "50899": { nombre:"Alfredo Hernandez Martinez", departamento:"Planta Descafeinado", direccion:"Direccion Tecnica" },
+  "50901": { nombre:"Juan Segundo Sandoval", departamento:"Tienda tradicional", direccion:"Direccion Comerc Nal" },
+  "50902": { nombre:"Germain Apale Jorge", departamento:"Planta Aglomerado", direccion:"Direccion Tecnica" },
+  "50904": { nombre:"Alejandro Apolinar Hidalgo", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "50906": { nombre:"Carlos Gildardo Rodriguez Martinez", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50908": { nombre:"Jorge Alberto Juarez Dominguez", departamento:"Auditoria", direccion:"Direccion General" },
+  "50911": { nombre:"Luis Angel Diaz Sarmiento", departamento:"Instrumentacion y Control", direccion:"Direccion Tecnica" },
+  "50914": { nombre:"Miguel Alejandro Muñoz Fuentes", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "50915": { nombre:"Luis Garcia Joaquin", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "50920": { nombre:"Oscar Arce De la Cruz", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "50923": { nombre:"Isaac Macin Vidal", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "50931": { nombre:"Claudia Carrasco Sanchez", departamento:"Auditoria", direccion:"Direccion General" },
+  "50932": { nombre:"Maria Fernanda Tress Barreda", departamento:"Mantenimiento", direccion:"Direccion Tecnica" },
+  "50933": { nombre:"Juan Gerardo Perdomo Abella", departamento:"Dirección de Coffee Service", direccion:"Direccion CoffeeServ" },
+  "50934": { nombre:"Daniela Lisette Alcantara Pacheco", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50935": { nombre:"Perla Abigail Mandujano Covarrubias", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "50936": { nombre:"Neftali Reyes Cornejo", departamento:"Oficina Queretaro", direccion:"Direccion CoffeeServ" },
+  "50937": { nombre:"Eduardo Rodriguez Martinez", departamento:"Mantenimiento", direccion:"Direccion Tecnica" },
+  "50939": { nombre:"Jessica Paulina Rubio Perez", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "50941": { nombre:"Alberto Lopez Tzanahua", departamento:"Seguridad Industrial", direccion:"Direccion Tecnica" },
+  "50945": { nombre:"Rocio Berenice Huerta Del Angel", departamento:"Oficina Cancun", direccion:"Direccion Admiva" },
+  "50949": { nombre:"Elsa Edith Zarate Sanchez", departamento:"Catación Planta", direccion:"Direccion General" },
+  "50950": { nombre:"Luis Humberto Alvarez Capol", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50951": { nombre:"Mariely Guadalupe Arias Flores", departamento:"Cadena de Suministro", direccion:"Direccion General" },
+  "50955": { nombre:"Esteban Jose Perez Cano", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "50956": { nombre:"Rene Gonzalez Rodriguez", departamento:"Oficina Guadalajara", direccion:"Direccion CoffeeServ" },
+  "50970": { nombre:"Erick De la Pera Espinosa", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "50971": { nombre:"Ana Lidia Carmona Avila", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "50973": { nombre:"Diana Laura Najera Alvarez", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "50978": { nombre:"Akari Moreno Guerra", departamento:"Procesos y Proyectos", direccion:"Direccion Tecnica" },
+  "50979": { nombre:"Saul Alejandro Hernandez Fernandez", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "50980": { nombre:"Mariana Carrera Herrera", departamento:"Comercio Electronico", direccion:"Direccion Comerc Nal" },
+  "50982": { nombre:"Juan Eduardo Peinado Vega", departamento:"Oficina Los Cabos", direccion:"Direccion CoffeeServ" },
+  "50986": { nombre:"Gloria Ana Gabriel Oropeza Miranda", departamento:"Seguridad Industrial", direccion:"Direccion Tecnica" },
+  "50988": { nombre:"Cristian de Jesus Ruiz Cue", departamento:"Oficina Merida", direccion:"Direccion CoffeeServ" },
+  "50989": { nombre:"Cesar Alfredo Mendez Morales", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "50991": { nombre:"Josue Rogelio Cañedo Rosas", departamento:"Almacen de PT CSP", direccion:"Direccion Admiva" },
+  "50992": { nombre:"Said Castro Tello", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "50995": { nombre:"Angel De Jesus Gonzalez", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "50998": { nombre:"Jeremy Zuriel Lara Herrera", departamento:"Almacen de PT CSP", direccion:"Direccion Admiva" },
+  "51001": { nombre:"Israel Yosef Aranda Cid", departamento:"Almacen General", direccion:"Direccion Tecnica" },
+  "51003": { nombre:"Fatima Escandon Castillo", departamento:"Catación Planta", direccion:"Direccion General" },
+  "51004": { nombre:"Dana Isamar Vega Cortes", departamento:"Recursos Humanos", direccion:"Direccion General" },
+  "51008": { nombre:"Edgar Guillermo Muñoz De la Cruz", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "51009": { nombre:"Isaias Elias Hernandez De la Rosa", departamento:"Planta Aglomerado", direccion:"Direccion Tecnica" },
+  "51012": { nombre:"Isidro Armando Juarez Virgilio", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "51015": { nombre:"Ariel Aguilar Reyes", departamento:"Instrumentacion y Control", direccion:"Direccion Tecnica" },
+  "51018": { nombre:"Carlos Ramon Galvan Salazar", departamento:"Mercadotecnia", direccion:"Direccion General" },
+  "51020": { nombre:"Karol Salvador Barragan Landeros", departamento:"Instrumentacion y Control", direccion:"Direccion Tecnica" },
+  "51024": { nombre:"Manuel Corona Landeta", departamento:"Planta Descafeinado", direccion:"Direccion Tecnica" },
+  "51029": { nombre:"Martin De la Torre Vidal", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "51031": { nombre:"Marcos Manuel Palma Alafita", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "51035": { nombre:"Andrea Garcia Ceron", departamento:"Ingenieria del Producto", direccion:"Direccion Comercial" },
+  "51036": { nombre:"Mario Alexis Rojas Mora", departamento:"Comercio Electronico", direccion:"Direccion Comerc Nal" },
+  "51037": { nombre:"Fabiola Badiano Lopez", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "51043": { nombre:"Oscar Daniel Gonzalez Merino", departamento:"Comercialización", direccion:"Direccion Comercial" },
+  "51045": { nombre:"Carlos Anniceres Garcia Falcon", departamento:"Almacen General", direccion:"Direccion Tecnica" },
+  "51046": { nombre:"Mario Arturo Salguero Cruz", departamento:"Oficina Monterrey", direccion:"Direccion CoffeeServ" },
+  "51047": { nombre:"Israel San Miguel Contreras", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "51049": { nombre:"Fatima del Rosario Piste Kuyoc", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "51050": { nombre:"Brayan Garcia Gonzalez", departamento:"Administracion General", direccion:"Direccion CoffeeServ" },
+  "51051": { nombre:"Jose Rodolfo Amador Cruz", departamento:"Administracion General", direccion:"Direccion CoffeeServ" },
+  "51052": { nombre:"Armando Santos Yepez", departamento:"Oficina Orizaba", direccion:"Direccion CoffeeServ" },
+  "51059": { nombre:"Emmanuel Crisostomo Vera", departamento:"Planta Descafeinado", direccion:"Direccion Tecnica" },
+  "51060": { nombre:"Elroul Paul Huerta Rios", departamento:"Mantenimiento", direccion:"Direccion Tecnica" },
+  "51062": { nombre:"Elizabeth Martos Moreno", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "51067": { nombre:"Luis Angel Martinez Lopez", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "51068": { nombre:"Luis Gabriel Lorenzo Caballero", departamento:"Tienda tradicional", direccion:"Direccion Comerc Nal" },
+  "51069": { nombre:"Luis Antonio Landero Canizales", departamento:"Almacen de Insumos CS", direccion:"Direccion Admiva" },
+  "51072": { nombre:"Carlos Diodoro Diaz Isais", departamento:"Oficina Los Cabos", direccion:"Direccion CoffeeServ" },
+  "51075": { nombre:"Aylin Aseret Escobar Bello", departamento:"Compras", direccion:"Direccion Admiva" },
+  "51076": { nombre:"Eduardo Dorantes Flores", departamento:"Tienda tradicional", direccion:"Direccion Comerc Nal" },
+  "51077": { nombre:"Brenda Ivet Lopez Uc", departamento:"Seguridad Industrial", direccion:"Direccion Tecnica" },
+  "51078": { nombre:"Fanny Meza Merced", departamento:"Recursos Humanos", direccion:"Direccion General" },
+  "51086": { nombre:"Osmar Salazar Mora", departamento:"Cadena de Suministro", direccion:"Direccion General" },
+  "51088": { nombre:"Nestor Carloman Flores Alducin", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "51094": { nombre:"Oscar Mendoza Diaz", departamento:"Oficina Mexico", direccion:"Direccion Admiva" },
+  "51096": { nombre:"Juan Orlando Gamez Mendoza", departamento:"Oficina Monterrey", direccion:"Direccion CoffeeServ" },
+  "51098": { nombre:"Antonio Flores Castro", departamento:"Tienda tradicional", direccion:"Direccion Comerc Nal" },
+  "51099": { nombre:"Irving Javier Martinez Bustos", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "51100": { nombre:"Edgar Clemente Perez", departamento:"Seguridad Industrial", direccion:"Direccion Tecnica" },
+  "51101": { nombre:"Denisse Yuritzy Lopez Gonzalez", departamento:"Comercio Electronico", direccion:"Direccion Comerc Nal" },
+  "51103": { nombre:"Jesus Ernesto Sanchez Mora", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "51104": { nombre:"Jose Alberto Flores Cuacquehua", departamento:"Comercio Electronico", direccion:"Direccion Comerc Nal" },
+  "51105": { nombre:"Marco Antonio Piedras Arce", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "51107": { nombre:"Javier Martinez Manzo", departamento:"Planeación Estratégica", direccion:"Direccion General" },
+  "51108": { nombre:"Freddie Esperides Olivares", departamento:"Procesos y Proyectos", direccion:"Direccion Tecnica" },
+  "51109": { nombre:"Gabriel Conde Campos", departamento:"Cadena de Suministro", direccion:"Direccion General" },
+  "51110": { nombre:"Hector Altamirano Caldelas", departamento:"Almacen de PT CSP", direccion:"Direccion Admiva" },
+  "51112": { nombre:"Osvaldo Francisco Loeza Aceves", departamento:"Oficina Guadalajara", direccion:"Direccion CoffeeServ" },
+  "51113": { nombre:"Jonathan Mireles Barron", departamento:"Oficina Monterrey", direccion:"Direccion CoffeeServ" },
+  "51115": { nombre:"Luis Gutierrez Coria", departamento:"Cadena de Suministro", direccion:"Direccion General" },
+  "51116": { nombre:"Jose Arturo Ortiz Suarez", departamento:"Almacen General", direccion:"Direccion Tecnica" },
+  "51117": { nombre:"Guillermo Xavier Campos Sampieri", departamento:"Compras", direccion:"Direccion Admiva" },
+  "51118": { nombre:"Ricardo Ruiz Sandi", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "51125": { nombre:"Gerardo Palacios Rivera", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "51126": { nombre:"Juan Carlos Pech Mas", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "51127": { nombre:"Jose Angel Rodriguez Estrada", departamento:"Oficina Monterrey", direccion:"Direccion CoffeeServ" },
+  "51131": { nombre:"Jorge Rodriguez Castillo", departamento:"Tienda tradicional", direccion:"Direccion Comerc Nal" },
+  "51132": { nombre:"Karla Daniela Sanchez Melendez", departamento:"Dirección General", direccion:"Direccion General" },
+  "51133": { nombre:"Sara Lilia Rodriguez Arizmendi", departamento:"Dirección General", direccion:"Direccion General" },
+  "51137": { nombre:"Pedro Valdez Gervacio", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "51138": { nombre:"Alfonso Almeida Navarro", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "51139": { nombre:"Jesus Enrique Lazo Ortega", departamento:"Oficina Guadalajara", direccion:"Direccion Admiva" },
+  "51140": { nombre:"Omar Rojano Vallejo", departamento:"Oficina Queretaro", direccion:"Direccion CoffeeServ" },
+  "51142": { nombre:"Emmanuel Alexis Salayandia Mendez", departamento:"Oficina Monterrey", direccion:"Direccion CoffeeServ" },
+  "51143": { nombre:"Ismael Ventura Texoco", departamento:"Almacen de Refacciones", direccion:"Direccion Admiva" },
+  "51144": { nombre:"Juan Carlos Vasquez Gabriel", departamento:"Almacen de PT CSP", direccion:"Direccion Admiva" },
+  "51145": { nombre:"Fernando Vladimir Resendiz Mendoza", departamento:"Almacen de PT CSP", direccion:"Direccion Admiva" },
+  "51148": { nombre:"Jesus Alejandro Farfan Ramos", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "51150": { nombre:"Liliana Gonzalez Gonzalez", departamento:"Recursos Humanos", direccion:"Direccion General" },
+  "51152": { nombre:"Felipe Edgardo Carrillo Villalobos", departamento:"Oficina Vallarta", direccion:"Direccion CoffeeServ" },
+  "51153": { nombre:"Yoed Abiud Antonio Luciano", departamento:"Almacen de PT CSP", direccion:"Direccion Admiva" },
+  "51154": { nombre:"Abraham Astrik Ortiz Martinez", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "51155": { nombre:"Teresa Roman Lopez", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "51158": { nombre:"Juan Carlos Rodriguez Trejo", departamento:"Oficina Guadalajara", direccion:"Direccion CoffeeServ" },
+  "51160": { nombre:"Luis Alberto Martinez Dominguez", departamento:"Autoservicio y Mayoreo", direccion:"Direccion Comerc Nal" },
+  "51161": { nombre:"Genaro Hernandez De Jesus", departamento:"Oficina Orizaba", direccion:"Direccion CoffeeServ" },
+  "51170": { nombre:"Porfirio Jair Hernandez Romero", departamento:"Contabilidad", direccion:"Direccion Admiva" },
+  "51171": { nombre:"Alejandro Paredes Roman", departamento:"Oficina Guadalajara", direccion:"Direccion CoffeeServ" },
+  "51174": { nombre:"Cecilia Daniela Ibañez Cruz", departamento:"Compras", direccion:"Direccion Admiva" },
+  "51175": { nombre:"Juan Pablo Rosas Vasquez", departamento:"Almacen de Refacciones", direccion:"Direccion Admiva" },
+  "51176": { nombre:"Eddi Julian Herrera Aguilar", departamento:"Oficina Cancun", direccion:"Direccion Admiva" },
+  "51178": { nombre:"Maythe Toribio Bernabe", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "51179": { nombre:"Merari Elisabet Zavaleta Gomez", departamento:"Administracion General", direccion:"Direccion CoffeeServ" },
+  "51180": { nombre:"Gerson David Arriaga Paz", departamento:"Oficina Monterrey", direccion:"Direccion CoffeeServ" },
+  "51181": { nombre:"Angela Cruz Portillo", departamento:"Mercadotecnia", direccion:"Direccion General" },
+  "51182": { nombre:"Maybelin Velazquez Gomez", departamento:"Mercadotecnia", direccion:"Direccion General" },
+  "51184": { nombre:"Alejandro Leyva Gonzalez", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "51185": { nombre:"Maria Fernanda Colorado Romero", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "51186": { nombre:"Ana Paola Mathey Garcia", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "51188": { nombre:"Ivan Valencia Guzman", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "51189": { nombre:"Hector Alejandro Rodriguez Hernandez", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "51190": { nombre:"Nicolas Alejandro Rojo Delgado", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "51193": { nombre:"David Garcia Huexca", departamento:"Oficina Vallarta", direccion:"Direccion CoffeeServ" },
+  "51194": { nombre:"Alfonso Alejandro Espinoza Sanchez", departamento:"Oficina Guadalajara", direccion:"Direccion CoffeeServ" },
+  "51195": { nombre:"Angel De la Paz Herrera", departamento:"Oficina Orizaba", direccion:"Direccion CoffeeServ" },
+  "51197": { nombre:"Juan Eduardo Rodriguez Garcia", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "51199": { nombre:"Jose Angel Perez Gracida", departamento:"Procesos y Proyectos", direccion:"Direccion Tecnica" },
+  "51205": { nombre:"Elena Isabel Champion Martinez", departamento:"Dirección General", direccion:"Direccion General" },
+  "51206": { nombre:"Ismael Robles Ruezga", departamento:"Oficina Vallarta", direccion:"Direccion CoffeeServ" },
+  "51207": { nombre:"Arnoldo Bringas Alvarado", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "51208": { nombre:"Jose Alberto Rojas Pino", departamento:"Catación Planta", direccion:"Direccion General" },
+  "51210": { nombre:"Hector Vite Hernandez", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "51211": { nombre:"Osmar de Jesus Romero Santiago", departamento:"Instrumentacion y Control", direccion:"Direccion Tecnica" },
+  "51212": { nombre:"Eduardo Andrade Andrade", departamento:"Instrumentacion y Control", direccion:"Direccion Tecnica" },
+  "51215": { nombre:"Yesenia Bornios Bibiano", departamento:"Oficina Los Cabos", direccion:"Direccion CoffeeServ" },
+  "51217": { nombre:"Angel Castro Rosales", departamento:"Tienda tradicional", direccion:"Direccion Comerc Nal" },
+  "51218": { nombre:"Luis Alberto Villa Olivares", departamento:"Catación Planta", direccion:"Direccion General" },
+  "51219": { nombre:"Oscar Gerardo Andrade Nuñez", departamento:"Oficina Monterrey", direccion:"Direccion CoffeeServ" },
+  "51220": { nombre:"Manuel Jimenez Lugo", departamento:"Mantenimiento", direccion:"Direccion Tecnica" },
+  "51222": { nombre:"Nury Torres Roman", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "51223": { nombre:"Isis Daniela De la Cruz Benavides", departamento:"Oficina Queretaro", direccion:"Direccion CoffeeServ" },
+  "51224": { nombre:"Osvaldo de Jesus Rodriguez Beltran", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "51225": { nombre:"Janet Alicia Lopez Lozano", departamento:"Tienda tradicional", direccion:"Direccion Comerc Nal" },
+  "51226": { nombre:"Karen Yazmin Bernal Barron", departamento:"Oficina Monterrey", direccion:"Direccion CoffeeServ" },
+  "51227": { nombre:"Ismael Alejandro Torres Ramos", departamento:"Oficina Monterrey", direccion:"Direccion CoffeeServ" },
+  "51230": { nombre:"Andres de Jesus Valdez Cabrera", departamento:"Oficina Queretaro", direccion:"Direccion CoffeeServ" },
+  "51231": { nombre:"Cesar Ricardo Pulido Ruiz", departamento:"Almacen de PT CSP", direccion:"Direccion Admiva" },
+  "51232": { nombre:"Luis Andres Maldonado Ruiz", departamento:"Oficina Cancun", direccion:"Direccion CoffeeServ" },
+  "51234": { nombre:"Charly Kevin De los Santos Bonola", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "51235": { nombre:"Faviola Rodriguez Amado", departamento:"Recursos Humanos", direccion:"Direccion General" },
+  "51236": { nombre:"Hector Gabriel Velasco Cruz", departamento:"Oficina Monterrey", direccion:"Direccion CoffeeServ" },
+  "51240": { nombre:"Mauricio Perez Ballesteros", departamento:"Oficina Queretaro", direccion:"Direccion CoffeeServ" },
+  "51241": { nombre:"Braulio Valderrama Morales", departamento:"Almacen de Refacciones", direccion:"Direccion Admiva" },
+  "51242": { nombre:"Pedro Omar Tijerina Ortiz", departamento:"Oficina Monterrey", direccion:"Direccion CoffeeServ" },
+  "51244": { nombre:"Gabina Maricela Garcia Mercado", departamento:"Oficina Guadalajara", direccion:"Direccion CoffeeServ" },
+  "51245": { nombre:"Cesar David Corona De la Trinidad", departamento:"Tienda tradicional", direccion:"Direccion Comerc Nal" },
+  "51248": { nombre:"Job Daniel Ibarra Solorzano", departamento:"Oficina Guadalajara", direccion:"Direccion CoffeeServ" },
+  "51249": { nombre:"Jorge Rodrigo Soriano España", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "51250": { nombre:"Michael Mata Miranda", departamento:"Oficina Mexico", direccion:"Direccion CoffeeServ" },
+  "51251": { nombre:"Cristian Lortia Reyes", departamento:"Tienda tradicional", direccion:"Direccion Comerc Nal" },
+  "51252": { nombre:"Crhistian Roberto Castellanos Gamez", departamento:"Tienda tradicional", direccion:"Direccion Comerc Nal" },
+  "51253": { nombre:"Candido Villa De la Luz", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "51254": { nombre:"Roberto Giovani Perez Onofre", departamento:"Oficina Puebla", direccion:"Direccion CoffeeServ" },
+  "51255": { nombre:"Jasiel Silva Cid", departamento:"Planta Soluble", direccion:"Direccion Tecnica" },
+  "51256": { nombre:"Jose Maria Rodriguez Ramos", departamento:"Cafeteria Cafiver", direccion:"Direccion Comerc Nal" },
+  "51257": { nombre:"Marcelo Hernandez Bautista", departamento:"Tienda tradicional", direccion:"Direccion Comerc Nal" },
+  "51258": { nombre:"Arnulfo Madrid Hernandez", departamento:"Tienda tradicional", direccion:"Direccion Comerc Nal" },
+  "51259": { nombre:"Iram Gamaliel Zuñiga Hernandez", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "51260": { nombre:"Nancy Yareli Perez Tlaxcala", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "51261": { nombre:"Arely Leon Rodriguez", departamento:"Autoservicio y Mayoreo", direccion:"Direccion Comerc Nal" },
+  "51262": { nombre:"Juan Carlos Corona Vazquez", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "51263": { nombre:"Jose Jassiel Gomez Mendez", departamento:"Aseguramiento de la Calidad", direccion:"Direccion General" },
+  "51264": { nombre:"Jose de Jesus Garcia Aguilar", departamento:"Tienda tradicional", direccion:"Direccion Comerc Nal" },
+  "51265": { nombre:"Hilario Mendez De Jesus", departamento:"Seguridad Patrimonial", direccion:"Direccion General" },
+  "51266": { nombre:"Oscar Uriel Bautista Mozo", departamento:"Oficina Los Cabos", direccion:"Direccion CoffeeServ" },
+  "51267": { nombre:"Marlene Dominguez Hernandez", departamento:"Recursos Humanos", direccion:"Direccion General" },
+  "51270": { nombre:"Mario Alberto Flores Monico", departamento:"Dirección Comercializadora Nacional", direccion:"Direccion Comerc Nal" },
+};
+
+/* ============================================================
+   2) PROGRAMA DE LA SEMANA
+   ============================================================ */
+const SESIONES = [
+  { id:"lun", clase:"pL", dia:"Lunes 15 Junio",    tema:"SAP Overview + Demo de IA" },
+  { id:"mar", clase:"pM", dia:"Martes 16 Junio",   tema:"SAP Módulos (MM, SD, FI, PP, HR)" },
+  { id:"mie", clase:"pX", dia:"Miércoles 17 Junio",tema:"Portales Corporativos" },
+  { id:"jue", clase:"pJ", dia:"Jueves 18 Junio",   tema:"Microsoft 365 — Día completo" },
+  { id:"vie", clase:"pV", dia:"Viernes 19 Junio",  tema:"Ciberseguridad" },
+];
+
+const ADMIN_PASS = "cafiver2026"; // 👈 cámbiala
+
+/* ============================================================
+   🔗 CONEXIÓN CON GOOGLE SHEETS
+   ------------------------------------------------------------
+   Pega aquí la URL que te da Google al publicar el Apps Script
+   (termina en /exec). Mientras esté vacía, el formulario avisa
+   que falta configurar.
+   ============================================================ */
+const SHEETS_URL = "https://script.google.com/macros/s/AKfycbz3aXxARi35mGERXx2yXhNfZZ-Lq-jRw2rU9EZ1f6nICV2FRiQ8n2mKjSCFZZFz8pzFhA/exec";
+
+function sheetsListo(){
+  return SHEETS_URL && SHEETS_URL.indexOf("script.google.com") !== -1;
+}
+
+/* ============================================================
+   Estado
+   ============================================================ */
+let empActual = null;       // { num, nombre, departamento, direccion }
+let seleccion = {};         // { lun:"manana"|"tarde", ... }
+
+/* ============================================================
+   Helpers de Google Sheets (sin duplicados; llave = num empleado)
+   - guardarInscripcion: POST que inserta o actualiza la fila
+   - obtenerInscripcion: GET ?num=XXXX para ver si ya existe
+   - listarInscripciones: GET ?admin=1 para el panel de control
+   El Apps Script usa el número de empleado como llave única.
+   ============================================================ */
+async function guardarInscripcion(num, data){
+  if(!sheetsListo()) throw new Error("Google Sheets no configurado");
+  // text/plain evita el preflight CORS con Apps Script
+  const r = await fetch(SHEETS_URL, {
+    method:"POST",
+    headers:{ "Content-Type":"text/plain;charset=utf-8" },
+    body: JSON.stringify({ accion:"guardar", registro:data })
+  });
+  const j = await r.json();
+  if(!j || j.ok !== true) throw new Error(j && j.error ? j.error : "error al guardar");
+  return j;
+}
+async function obtenerInscripcion(num){
+  if(!sheetsListo()) return null;
+  try{
+    const r = await fetch(SHEETS_URL + "?num=" + encodeURIComponent(num), { method:"GET" });
+    const j = await r.json();
+    return (j && j.ok && j.registro) ? j.registro : null;
+  }catch(e){ return null; }
+}
+async function listarInscripciones(){
+  if(!sheetsListo()) return [];
+  try{
+    const r = await fetch(SHEETS_URL + "?admin=1", { method:"GET" });
+    const j = await r.json();
+    return (j && j.ok && Array.isArray(j.registros)) ? j.registros : [];
+  }catch(e){ return []; }
+}
+
+/* ============================================================
+   Refs
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const empNum = $("empNum"), btnBuscar = $("btnBuscar"), msgBuscar = $("msgBuscar");
+const ficha = $("ficha");
+const cardSesiones = $("cardSesiones"), diasBox = $("dias");
+const cardConfirmar = $("cardConfirmar"), btnInscribir = $("btnInscribir"), msgFinal = $("msgFinal");
+const exito = $("exito"), formBox = $("form");
+
+/* Construir tarjetas de sesiones */
+function renderSesiones(){
+  diasBox.innerHTML = "";
+  SESIONES.forEach(s=>{
+    const div = document.createElement("div");
+    div.className = "dia"; div.dataset.id = s.id;
+    div.innerHTML = `
+      <div class="dia-top">
+        <span class="check">✓</span>
+        <div class="info">
+          <div class="d">${s.dia}</div>
+          <div class="tema">${s.tema}</div>
+        </div>
+        <span class="pill ${s.clase}">${s.id.toUpperCase()}</span>
+      </div>
+      <div class="horarios">
+        <div class="horario" data-h="manana">Mañana<small>9:00–11:00 AM</small></div>
+        <div class="horario" data-h="tarde1">Tarde 1<small>2:00–4:00 PM</small></div>
+        <div class="horario" data-h="tarde2">Tarde 2<small>4:15–6:15 PM</small></div>
+      </div>`;
+    // toggle día
+    div.querySelector(".dia-top").addEventListener("click", ()=>{
+      const on = div.classList.toggle("sel");
+      if(on){ seleccion[s.id] = seleccion[s.id] || "manana"; pintarHorario(div, seleccion[s.id]); }
+      else { delete seleccion[s.id]; }
+      actualizarBoton();
+    });
+    // horarios
+    div.querySelectorAll(".horario").forEach(h=>{
+      h.addEventListener("click",(e)=>{
+        e.stopPropagation();
+        seleccion[s.id] = h.dataset.h;
+        pintarHorario(div, h.dataset.h);
+        actualizarBoton();
+      });
+    });
+    diasBox.appendChild(div);
+  });
+}
+function pintarHorario(div, h){
+  div.querySelectorAll(".horario").forEach(x=>x.classList.toggle("on", x.dataset.h===h));
+}
+function actualizarBoton(){
+  btnInscribir.disabled = !(empActual && Object.keys(seleccion).length>0);
+}
+
+/* ============================================================
+   Buscar empleado
+   ============================================================ */
+async function buscar(){
+  const num = empNum.value.trim();
+  msg(msgBuscar,"","");
+  ficha.classList.remove("show");
+  empActual = null; seleccion = {};
+  bloquear(cardSesiones,true); bloquear(cardConfirmar,true);
+  actualizarBoton();
+
+  if(!num){ return msg(msgBuscar,"Escribe tu número de empleado.","err"); }
+
+  const e = EMPLEADOS[num];
+  if(!e){
+    return msg(msgBuscar,`No encontramos el número ${num} en la base. Verifícalo o contacta a RH/TI.`,"err");
+  }
+
+  empActual = { num, ...e };
+  $("fNombre").textContent = e.nombre;
+  $("fNum").textContent = num;
+  $("fDepto").textContent = e.departamento;
+  $("fDir").textContent = e.direccion;
+  ficha.classList.add("show");
+
+  // ¿Ya está inscrito?
+  const previa = await obtenerInscripcion(num);
+  if(previa){
+    seleccion = previa.sesiones || {};
+    renderSesiones();
+    // marcar selección previa
+    Object.entries(seleccion).forEach(([id,h])=>{
+      const div = diasBox.querySelector(`.dia[data-id="${id}"]`);
+      if(div){ div.classList.add("sel"); pintarHorario(div,h); }
+    });
+    bloquear(cardSesiones,false); bloquear(cardConfirmar,false);
+    actualizarBoton();
+    msg(msgBuscar,`✓ Encontrado. Ya tienes una inscripción registrada — puedes actualizarla abajo.`,"info");
+    btnInscribir.textContent = "Actualizar mi inscripción";
+  } else {
+    renderSesiones();
+    bloquear(cardSesiones,false); bloquear(cardConfirmar,false);
+    msg(msgBuscar,`✓ ¡Hola, ${e.nombre.split(" ")[0]}! Continúa eligiendo tus sesiones.`,"ok");
+    btnInscribir.textContent = "Confirmar mi inscripción";
+  }
+}
+
+function bloquear(card, b){
+  card.style.opacity = b ? .5 : 1;
+  card.style.pointerEvents = b ? "none" : "auto";
+}
+function msg(el, txt, tipo){
+  el.textContent = txt;
+  el.className = "msg" + (txt ? " show "+tipo : "");
+}
+
+/* ============================================================
+   Inscribir / actualizar
+   ============================================================ */
+async function inscribir(){
+  if(!empActual) return;
+  if(Object.keys(seleccion).length===0){ return msg(msgFinal,"Selecciona al menos un día.","err"); }
+  if(!sheetsListo()){ return msg(msgFinal,"El formulario aún no está conectado a Google Sheets. Avisa al administrador.","err"); }
+
+  btnInscribir.disabled = true;
+  const original = btnInscribir.textContent;
+  btnInscribir.innerHTML = '<span class="loader"></span> Guardando...';
+
+  const data = {
+    num: empActual.num,
+    nombre: empActual.nombre,
+    departamento: empActual.departamento,
+    direccion: empActual.direccion,
+    sesiones: seleccion,
+    fecha: new Date().toISOString(),
+  };
+
+  try{
+    await guardarInscripcion(empActual.num, data);
+    mostrarExito(data);
+  }catch(e){
+    btnInscribir.disabled = false;
+    btnInscribir.textContent = original;
+    msg(msgFinal,"No se pudo guardar. Revisa tu conexión e intenta de nuevo.","err");
+  }
+}
+
+function nombreSesion(id){ const s = SESIONES.find(x=>x.id===id); return s?s.dia:id; }
+function etiquetaHorario(h){
+  if(h==="tarde1") return "Tarde 1 (2:00–4:00 PM)";
+  if(h==="tarde2") return "Tarde 2 (4:15–6:15 PM)";
+  return "Mañana (9:00–11:00 AM)";
+}
+function horarioCorto(h){
+  if(h==="tarde1") return "T1";
+  if(h==="tarde2") return "T2";
+  return "AM";
+}
+
+function mostrarExito(data){
+  formBox.style.display = "none";
+  $("exitoSub").innerHTML = `Gracias, <b>${data.nombre}</b>. Te esperamos en la Semana TI.`;
+  const res = $("resumen");
+  res.innerHTML = `
+    <div class="r"><span>Empleado</span><span>#${data.num}</span></div>
+    <div class="r"><span>Departamento</span><span>${data.departamento}</span></div>
+    <div class="r"><span>Dirección</span><span>${data.direccion}</span></div>` +
+    Object.entries(data.sesiones).map(([id,h])=>
+      `<div class="r"><span>${nombreSesion(id)}</span><span>${etiquetaHorario(h)}</span></div>`
+    ).join("");
+  exito.classList.add("show");
+  window.scrollTo({top:0, behavior:"smooth"});
+}
+
+/* ============================================================
+   Admin
+   ============================================================ */
+function csvEscape(v){ v = (v??"").toString(); return /[",\n]/.test(v) ? '"'+v.replace(/"/g,'""')+'"' : v; }
+
+async function pintarAdmin(){
+  const lista = await listarInscripciones();
+  lista.sort((a,b)=> (a.fecha<b.fecha?1:-1));
+  $("stTotal").textContent = lista.length;
+  $("stSesiones").textContent = lista.reduce((n,x)=> n + Object.keys(x.sesiones||{}).length, 0);
+  const tb = $("tbody");
+  if(lista.length===0){ tb.innerHTML = `<tr><td colspan="6" class="vacio">Aún no hay inscripciones.</td></tr>`; return; }
+  tb.innerHTML = lista.map(x=>{
+    const ses = Object.entries(x.sesiones||{}).map(([id,h])=>`${id.toUpperCase()}·${horarioCorto(h)}`).join(", ");
+    const f = new Date(x.fecha).toLocaleDateString("es-MX",{day:"2-digit",month:"short",hour:"2-digit",minute:"2-digit"});
+    return `<tr><td><span class="mono">${x.num}</span></td><td>${x.nombre}</td><td>${x.departamento}</td><td>${x.direccion}</td><td>${ses}</td><td>${f}</td></tr>`;
+  }).join("");
+}
+
+async function exportarCSV(){
+  const lista = await listarInscripciones();
+  lista.sort((a,b)=> (a.fecha<b.fecha?1:-1));
+  const head = ["Numero","Nombre","Departamento","Direccion","Lunes","Martes","Miercoles","Jueves","Viernes","FechaInscripcion"];
+  const rows = lista.map(x=>{
+    const g = id => {
+      const h = x.sesiones && x.sesiones[id];
+      if(!h) return "";
+      if(h==="tarde1") return "Tarde 1";
+      if(h==="tarde2") return "Tarde 2";
+      return "Mañana";
+    };
+    return [x.num,x.nombre,x.departamento,x.direccion,g("lun"),g("mar"),g("mie"),g("jue"),g("vie"),new Date(x.fecha).toLocaleString("es-MX")].map(csvEscape).join(",");
+  });
+  const csv = "\uFEFF" + [head.join(","), ...rows].join("\n");
+  const blob = new Blob([csv],{type:"text/csv;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "inscripciones_semana_ti.csv";
+  a.click();
+}
+
+/* ============================================================
+   Eventos
+   ============================================================ */
+btnBuscar.addEventListener("click", buscar);
+empNum.addEventListener("keydown", e=>{ if(e.key==="Enter") buscar(); });
+empNum.addEventListener("input", ()=>{ empNum.value = empNum.value.replace(/\D/g,""); });
+btnInscribir.addEventListener("click", inscribir);
+$("btnEditar").addEventListener("click", ()=>{ exito.classList.remove("show"); formBox.style.display=""; window.scrollTo({top:0,behavior:"smooth"}); });
+
+// admin
+$("adminLink").addEventListener("click", ()=>{ $("adminPanel").classList.add("show"); $("adminPanel").scrollIntoView({behavior:"smooth"}); });
+$("btnAdminCerrar").addEventListener("click", ()=> $("adminPanel").classList.remove("show"));
+$("btnAdminEntrar").addEventListener("click", async ()=>{
+  if($("adminPass").value === ADMIN_PASS){
+    $("adminLogin").style.display="none"; $("adminData").style.display="block";
+    await pintarAdmin();
+  } else { msg($("msgAdmin"),"Contraseña incorrecta.","err"); }
+});
+$("btnRefrescar").addEventListener("click", pintarAdmin);
+$("btnCSV").addEventListener("click", exportarCSV);
+$("btnAdminSalir").addEventListener("click", ()=>{
+  $("adminData").style.display="none"; $("adminLogin").style.display="block";
+  $("adminPass").value=""; msg($("msgAdmin"),"","");
+});
+
+renderSesiones();
+</script>
