@@ -932,7 +932,7 @@ async function inscribir(){
   if(Object.keys(seleccion).length===0){ return msg(msgFinal,"Selecciona al menos un día.","err"); }
   if(!sheetsListo()){ return msg(msgFinal,"El formulario aún no está conectado a Google Sheets. Avisa al administrador.","err"); }
 
-  btnInscribir.disabled = false;
+  btnInscribir.disabled = true;
   const original = btnInscribir.textContent;
   btnInscribir.innerHTML = '<span class="loader"></span> Guardando...';
 
