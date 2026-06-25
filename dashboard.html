@@ -278,9 +278,102 @@
   .curso-otro{background:rgba(91,101,115,.16);color:#a3afc5;border:1px solid rgba(91,101,115,.25)}
   .tabla-hint{font-size:11px;color:#5a6b87;margin-top:10px;text-align:right;font-family:'Space Mono',monospace;font-style:italic}
 
+  /* ===== Evidencia documental (PDFs) ===== */
+  .evidencia-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:24px}
+  .doc-card{
+    background:rgba(13,18,28,.65);border:1px solid rgba(98,130,180,.20);
+    border-radius:16px;padding:28px 28px 24px;backdrop-filter:blur(8px);
+    position:relative;overflow:hidden;text-decoration:none;color:inherit;
+    transition:.2s ease;display:flex;flex-direction:column;gap:14px;
+  }
+  .doc-card::after{content:"";position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(98,130,180,.4),transparent)}
+  .doc-card:hover{border-color:rgba(91,141,255,.40);transform:translateY(-2px);box-shadow:0 12px 30px rgba(0,0,0,.25)}
+  .doc-card.naranja:hover{border-color:rgba(255,133,81,.45)}
+  .doc-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+  .doc-icon{
+    width:54px;height:54px;border-radius:12px;flex:0 0 auto;
+    display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;
+    font-family:'Space Mono',monospace;letter-spacing:.04em;
+  }
+  .doc-card.azul .doc-icon{background:rgba(91,141,255,.15);color:#5b8dff;border:1px solid rgba(91,141,255,.35);box-shadow:0 0 18px rgba(91,141,255,.15)}
+  .doc-card.naranja .doc-icon{background:rgba(255,133,81,.15);color:#ff8551;border:1px solid rgba(255,133,81,.35);box-shadow:0 0 18px rgba(255,133,81,.15)}
+  .doc-info{flex:1;min-width:0}
+  .doc-tag{font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:#5a6b87;font-weight:600;margin-bottom:6px}
+  .doc-info h3{font-weight:500;font-size:19px;line-height:1.25;color:#fff;letter-spacing:-.01em}
+  .doc-body p{font-size:13.5px;color:#8b9ab4;line-height:1.55;font-weight:300}
+  .doc-body p b{color:#dbe3f0;font-weight:500}
+  .doc-meta{display:flex;justify-content:space-between;align-items:center;padding-top:14px;border-top:1px dashed rgba(98,130,180,.20);font-size:11px;color:#5a6b87;font-family:'Space Mono',monospace;letter-spacing:.04em}
+  .doc-meta .stats{display:flex;gap:14px}
+  .doc-meta .stats b{color:#dbe3f0;font-weight:700}
+  .doc-meta .open{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-family:'Space Grotesk',sans-serif;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+  .doc-card.azul .doc-meta .open{color:#5b8dff}
+  .doc-card.naranja .doc-meta .open{color:#ff8551}
+  .doc-meta .open::after{content:"→";font-family:'Space Grotesk',sans-serif;font-weight:400;transition:transform .2s}
+  .doc-card:hover .doc-meta .open::after{transform:translateX(4px)}
+
   /* Footer */
   .foot{text-align:center;color:#5a6b87;font-size:12px;margin-top:48px;font-family:'Space Mono',monospace;letter-spacing:.04em;line-height:1.8}
   .foot b{color:#8b9ab4;font-weight:700}
+
+  /* ===== Login overlay ===== */
+  .login-overlay{
+    position:fixed;inset:0;z-index:9999;
+    background:#06080d;
+    background-image:
+      radial-gradient(900px 600px at 90% -10%, rgba(22,82,240,.20), transparent 60%),
+      radial-gradient(700px 500px at -10% 110%, rgba(241,90,34,.12), transparent 55%),
+      linear-gradient(180deg,#06080d 0%,#0a0e16 100%);
+    display:flex;align-items:center;justify-content:center;padding:24px;
+  }
+  .login-overlay::before{
+    content:"";position:fixed;inset:0;pointer-events:none;
+    background-image:linear-gradient(90deg,rgba(22,82,240,.05) 1px,transparent 1px),linear-gradient(rgba(22,82,240,.04) 1px,transparent 1px);
+    background-size:80px 80px;opacity:.6;
+  }
+  .login-card{
+    position:relative;z-index:1;
+    background:rgba(13,18,28,.85);
+    border:1px solid rgba(98,130,180,.22);
+    border-radius:18px;padding:48px 44px;
+    width:100%;max-width:440px;
+    backdrop-filter:blur(12px);
+    box-shadow:0 20px 60px rgba(0,0,0,.4);
+  }
+  .login-card::before{
+    content:"";position:absolute;top:0;left:0;right:0;height:1px;
+    background:linear-gradient(90deg,transparent,rgba(98,130,180,.5),transparent);
+  }
+  .login-tag{display:inline-flex;align-items:center;gap:8px;font-size:11px;letter-spacing:.30em;text-transform:uppercase;color:#ff8551;font-weight:600;margin-bottom:16px}
+  .login-tag::before{content:"";width:8px;height:8px;border-radius:50%;background:#ff8551;box-shadow:0 0 12px #ff8551}
+  .login-card h2{font-weight:300;font-size:28px;line-height:1.1;letter-spacing:-.02em;color:#fff;margin-bottom:10px}
+  .login-card h2 b{font-weight:600;color:#3d79ff}
+  .login-card .desc{font-size:13.5px;color:#8b9ab4;font-weight:300;line-height:1.55;margin-bottom:28px}
+  .login-card label{display:block;font-size:10.5px;letter-spacing:.20em;text-transform:uppercase;color:#5a6b87;font-weight:600;margin-bottom:8px;margin-top:14px}
+  .login-card input{
+    width:100%;padding:13px 16px;font-family:'Space Grotesk',sans-serif;font-size:15px;
+    background:rgba(98,130,180,.06);border:1px solid rgba(98,130,180,.25);
+    color:#dbe3f0;border-radius:9px;outline:none;transition:.15s;
+  }
+  .login-card input::placeholder{color:#5a6b87}
+  .login-card input:focus{border-color:#3d79ff;background:rgba(61,121,255,.08);box-shadow:0 0 0 3px rgba(61,121,255,.10)}
+  .login-card .btn{
+    width:100%;margin-top:22px;padding:14px;font-family:'Space Grotesk',sans-serif;
+    font-size:14.5px;font-weight:600;letter-spacing:.02em;
+    background:linear-gradient(135deg,#1652f0,#3d79ff);color:#fff;
+    border:none;border-radius:9px;cursor:pointer;transition:.15s;
+    box-shadow:0 4px 18px rgba(61,121,255,.30);
+  }
+  .login-card .btn:hover{transform:translateY(-1px);box-shadow:0 6px 24px rgba(61,121,255,.40)}
+  .login-card .btn:active{transform:translateY(0)}
+  .login-card .err{
+    margin-top:14px;padding:10px 14px;background:rgba(255,90,90,.10);border:1px solid rgba(255,90,90,.30);
+    border-radius:8px;font-size:12.5px;color:#ff8585;display:none;
+  }
+  .login-card .err.show{display:block}
+  .login-card .foot{margin-top:28px;padding-top:20px;border-top:1px solid rgba(98,130,180,.16);font-size:10.5px;color:#5a6b87;font-family:'Space Mono',monospace;letter-spacing:.06em;text-align:center;line-height:1.7}
+  .login-card .foot b{color:#8b9ab4;font-weight:700}
+  #appContent{display:none}
+  #appContent.show{display:block}
 
   /* Responsive */
   @media (max-width:980px){
@@ -289,7 +382,7 @@
     .hero .meta-grid{grid-template-columns:repeat(2,1fr)}
     .stat-row, .stat-row.row4{grid-template-columns:1fr 1fr}
     .week-grid{grid-template-columns:1fr 1fr}
-    .quotes, .top-list, .comp-grid, .reco-list, .tx-grid{grid-template-columns:1fr}
+    .quotes, .top-list, .comp-grid, .reco-list, .tx-grid, .evidencia-grid{grid-template-columns:1fr}
     .bar .lbl{flex-basis:130px;font-size:13px}
     .dir-row{grid-template-columns:130px 1fr 60px 70px;gap:10px;padding:10px}
     .recos{padding:32px 24px}
@@ -302,6 +395,26 @@
   }
 </style>
 
+<!-- ===== Pantalla de login ===== -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-card">
+    <div class="login-tag">Acceso restringido</div>
+    <h2>Reporte ejecutivo<br><b>Semana TI 2026</b></h2>
+    <p class="desc">Este reporte contiene datos confidenciales de empleados (nombres, correos y propuestas internas). Ingresa la contraseña para acceder.</p>
+
+    <label for="loginPass">Contraseña</label>
+    <input type="password" id="loginPass" placeholder="Ingresa la contraseña" autocomplete="current-password">
+
+    <div class="err" id="loginErr">Contraseña incorrecta. Inténtalo de nuevo.</div>
+
+    <button class="btn" id="loginBtn">Acceder al reporte</button>
+
+    <div class="foot">CAFIVER · DIRECCIÓN GENERAL · <b>2026</b></div>
+  </div>
+</div>
+
+<!-- ===== Contenido (oculto hasta autenticar) ===== -->
+<div id="appContent">
 <div class="wrap">
 
   <!-- HERO -->
@@ -2046,9 +2159,125 @@ Creación de materiales de capacitación con IA</p>
     </div>
   </div>
 
+  <!-- ============== 10 · EVIDENCIA DOCUMENTAL ============== -->
+  <section>
+    <div class="sec-head">
+      <div class="label">10 · Evidencia documental</div>
+      <h2 class="titulo">Soporte físico y digital del programa.</h2>
+      <p class="subt">Documentos originales que sustentan los datos de este reporte. Las listas de asistencia están firmadas por cada participante. Los formatos de solicitud fueron entregados en físico y capturados al sistema. Ambos disponibles para auditoría.</p>
+      <div class="rule"></div>
+    </div>
+
+    <div class="evidencia-grid">
+      <a class="doc-card azul" href="evidencia_listas_asistencia.pdf" target="_blank" rel="noopener">
+        <div class="doc-head">
+          <div class="doc-icon">PDF</div>
+          <div class="doc-info">
+            <div class="doc-tag">Documento de soporte</div>
+            <h3>Listas de asistencia firmadas</h3>
+          </div>
+        </div>
+        <div class="doc-body">
+          <p>Formato <b>RH-FOR-005 Ver/14</b> firmado por cada participante en las sesiones impartidas. Incluye número de empleado, nombre, puesto, área y firma. Documento original entregado por Recursos Humanos.</p>
+        </div>
+        <div class="doc-meta">
+          <div class="stats"><span><b>14</b> hojas</span><span><b>232</b> firmas</span></div>
+          <span class="open">Abrir documento</span>
+        </div>
+      </a>
+
+      <a class="doc-card naranja" href="evidencia_solicitudes.pdf" target="_blank" rel="noopener">
+        <div class="doc-head">
+          <div class="doc-icon">PDF</div>
+          <div class="doc-info">
+            <div class="doc-tag">Documento de soporte</div>
+            <h3>Formatos de solicitud de capacitación</h3>
+          </div>
+        </div>
+        <div class="doc-body">
+          <p>Formularios físicos llenados por los empleados con sus <b>necesidades de capacitación</b> y propuestas de proyecto. Después capturados al sistema para análisis. Documento original con firmas.</p>
+        </div>
+        <div class="doc-meta">
+          <div class="stats"><span><b>85</b> solicitudes</span><span><b>50</b> proyectos</span></div>
+          <span class="open">Abrir documento</span>
+        </div>
+      </a>
+    </div>
+  </section>
+
   <p class="foot">
     <b>FUENTES:</b> 14 listas de asistencia físicas firmadas (RH-FOR-005 Ver/14) · 85 solicitudes de capacitación capturadas en sistema · base de empleados 350 registros<br>
     <b>SEMANA TI 2026 · CAFIVER</b> · Reporte ejecutivo para Dirección General · Cierre del programa
   </p>
 
 </div>
+</div><!-- fin appContent -->
+
+<script>
+(function(){
+  // === Configuración ===
+  var PASSWORD = 'cafiver2026';           // contraseña de acceso
+  var SESSION_HOURS = 8;                  // horas que dura la sesión sin pedir contraseña otra vez
+  var STORAGE_KEY = 'semanati_dg_auth';
+
+  var overlay = document.getElementById('loginOverlay');
+  var app = document.getElementById('appContent');
+  var pass = document.getElementById('loginPass');
+  var btn = document.getElementById('loginBtn');
+  var err = document.getElementById('loginErr');
+
+  // ¿Ya hay sesión válida en este navegador?
+  function checkSession(){
+    try{
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return false;
+      var data = JSON.parse(raw);
+      var ahora = Date.now();
+      if(data.expires && ahora < data.expires){
+        return true;
+      }
+      localStorage.removeItem(STORAGE_KEY);
+    }catch(e){}
+    return false;
+  }
+
+  function entrar(){
+    overlay.style.display = 'none';
+    app.classList.add('show');
+    document.body.style.overflow = 'auto';
+  }
+
+  function validar(){
+    var v = (pass.value || '').trim();
+    if(v === PASSWORD){
+      try{
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+          expires: Date.now() + SESSION_HOURS * 60 * 60 * 1000
+        }));
+      }catch(e){}
+      entrar();
+    } else {
+      err.classList.add('show');
+      pass.value = '';
+      pass.focus();
+      setTimeout(function(){ err.classList.remove('show'); }, 3000);
+    }
+  }
+
+  // Si ya hay sesión, entrar directo
+  if(checkSession()){
+    entrar();
+    return;
+  }
+
+  // Foco automático al input
+  document.body.style.overflow = 'hidden';
+  setTimeout(function(){ pass.focus(); }, 100);
+
+  // Eventos
+  btn.addEventListener('click', validar);
+  pass.addEventListener('keydown', function(e){
+    if(e.key === 'Enter') validar();
+  });
+})();
+</script>
